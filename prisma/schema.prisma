@@ -1,0 +1,235 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../generated/prisma"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String             @id @map("_id")
+  name              String
+  email             String
+  emailVerified     Boolean            @default(false)
+  image             String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  sessions          Session[]
+  accounts          Account[]
+  folderDecorations FolderDecoration[]
+
+  banner             String?
+  themePacks         ThemePacks[]
+  userUploadStickers UserUploadStickers[]
+
+  platformSettings UserPlatformSettings[]
+  userStickerPacks UserStickerPacks[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model UserPlatformSettings {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activePlatform String   @default("dropbox")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([userId])
+  @@map("user_platform_settings")
+}
+
+model Session {
+  id        String   @id @map("_id")
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @map("_id")
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @map("_id")
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model FolderDecoration {
+  id                    String       @id @default(auto()) @map("_id") @db.ObjectId
+  folderId              String?      @unique
+  name                  String
+  color                 String
+  backgroundPattern     String
+  backgroundPatternSize Float?       @default(100)
+  thumbnail             String?
+  createdDate           DateTime     @default(now())
+  updatedDate           DateTime     @updatedAt
+  createdBy             String
+  isSample              Boolean      @default(false)
+  decorations           Decoration[]
+  createdByUser         User?        @relation(fields: [createdBy], references: [id])
+  platform              String       @default("dropbox")
+
+  @@map("folder_decoration")
+}
+
+model Decoration {
+  id                     String           @id @default(auto()) @map("_id") @db.ObjectId
+  folderId               String
+  x                      Float
+  y                      Float
+  width                  Float
+  height                 Float
+  rotation               Float            @default(0)
+  effects                String[]         @default([])
+  zIndex                 Int
+  type                   String
+  content                String
+  frame_content          String?          @default("")
+  frame_color            String?          @default("white")
+  frame_content_offset_x Float?           @default(0)
+  frame_content_offset_y Float?           @default(0)
+  frame_content_scale    Float?           @default(0)
+  folder                 FolderDecoration @relation(fields: [folderId], references: [id], onDelete: Cascade)
+
+  @@map("decoration")
+}
+
+model Sticker {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String
+  theme       String
+  isFree      Boolean       @default(true)
+  price       Float         @default(0)
+  artistName  String?
+  stickers    StickerItem[]
+  thumbnail   String?
+  // downloads   Int           @default(0)
+  createdDate DateTime      @default(now())
+  updatedDate DateTime      @updatedAt
+  // createdById String
+  // createdBy   String
+  isSample    Boolean       @default(false)
+}
+
+model StickerItem {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  url       String
+  sticker   Sticker @relation(fields: [stickerId], references: [id])
+  stickerId String
+}
+
+model ThemePacks {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  key           String          @unique
+  name          String
+  theme         String
+  icon          String
+  description   String
+  stickers      ThemeStickers[]
+  createdBy     String
+  createdByUser User?           @relation(fields: [createdBy], references: [id])
+
+  @@map("theme_packs")
+}
+
+model ThemeStickers {
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  prompt       String
+  themePacks   ThemePacks? @relation(fields: [themePacksId], references: [id])
+  themePacksId String?     @db.ObjectId
+
+  @@map("theme_stickers")
+}
+
+model UserUploadStickers {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  fileUrl       String
+  fileName      String
+  thumbnailUrl  String
+  publicId      String?
+  createdDate   DateTime @default(now())
+  updatedDate   DateTime @updatedAt
+  createdById   String
+  createdBy     String
+  isSample      Boolean  @default(false)
+  createdByUser User?    @relation(fields: [createdById], references: [id])
+
+  @@map("user_upload_stickers")
+}
+
+model UserStickerPacks {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  title           String
+  description     String?
+  thumbnail       String?
+  purchaseLink    String?
+  price           Float    @default(0)
+  tags            String[] @default([])
+  favoriteUserIds String[] @default([])
+  createdById     String
+  createdBy       User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("user_sticker_packs")
+}
+
+model BackgroundPattern {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  filename  String   @default("")
+  fileUrl   String   @default("")
+  publicId  String?
+  size      Float?   @default(100)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("background_pattern")
+}

@@ -1,0 +1,167 @@
+@import "tailwindcss";
+
+@theme {
+  /* --- Fonts --- */
+  --font-sans:
+    var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  /* --- Spacing & Radius --- */
+  --radius-lg: 1rem;
+
+  /* --- Animations --- */
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-float-delayed: float 6s ease-in-out infinite -2s;
+  --animate-float-slow: float 8s ease-in-out infinite -4s;
+  --animate-bounce-gentle: bounce-gentle 2s ease-in-out infinite;
+  --animate-pulse-soft: pulse-soft 3s ease-in-out infinite;
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-20px) rotate(3deg);
+    }
+  }
+
+  @keyframes bounce-gentle {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+
+  @keyframes pulse-soft {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.02);
+    }
+  }
+
+  /* --- Design Tokens (Custom Properties) --- */
+  /* These allow you to use v-bind() in JS or var() in CSS */
+  --gradient-warm: linear-gradient(
+    135deg,
+    hsl(12, 85%, 60%) 0%,
+    hsl(35, 90%, 65%) 100%
+  );
+  --gradient-soft: linear-gradient(
+    135deg,
+    hsl(175, 50%, 92%) 0%,
+    hsl(200, 60%, 95%) 100%
+  );
+  --gradient-hero: linear-gradient(
+    180deg,
+    hsl(30, 30%, 98%) 0%,
+    hsl(35, 40%, 96%) 100%
+  );
+
+  --shadow-soft: 0 4px 20px -4px hsl(12 85% 60% / 0.15);
+  --shadow-card: 0 8px 30px -8px hsl(240 20% 20% / 0.08);
+  --shadow-elevated: 0 20px 50px -15px hsl(240 20% 20% / 0.12);
+}
+
+/* --- Color Palettes --- */
+
+/* Light Mode (Default) */
+:root {
+  /* Core palette - warm coral & teal harmony */
+  --color-background: 30 30% 98%;
+  --color-foreground: 240 20% 20%;
+
+  --color-card: 0 0% 100%;
+  --color-card-foreground: 240 20% 20%;
+
+  --color-popover: 0 0% 100%;
+  --color-popover-foreground: 240 20% 20%;
+
+  /* Primary - Warm Coral */
+  --color-primary: 12 85% 60%;
+  --color-primary-foreground: 0 0% 100%;
+
+  /* Secondary - Soft Teal */
+  --color-secondary: 175 50% 92%;
+  --color-secondary-foreground: 175 60% 30%;
+
+  --color-muted: 30 20% 94%;
+  --color-muted-foreground: 240 10% 45%;
+
+  /* Accent - Peachy warmth */
+  --color-accent: 25 90% 95%;
+  --color-accent-foreground: 12 85% 40%;
+
+  --color-destructive: 0 84.2% 60.2%;
+  --color-destructive-foreground: 0 0% 100%;
+
+  /* --color-border: oklch(0.922 0.003 264.667); */
+  --color-input: 30 20% 90%;
+  --color-ring: 12 85% 60%;
+
+  /* Folder icon colors */
+  --color-folder-coral: 12 85% 60%;
+  --color-folder-teal: 175 60% 45%;
+  --color-folder-purple: 265 60% 60%;
+  --color-folder-gold: 40 90% 55%;
+  --color-folder-mint: 160 50% 50%;
+
+  /* Sidebar */
+  --color-sidebar-background: 0 0% 98%;
+  --color-sidebar-foreground: 240 5.3% 26.1%;
+  --color-sidebar-primary: 240 5.9% 10%;
+  --color-sidebar-primary-foreground: 0 0% 98%;
+  --color-sidebar-accent: 240 4.8% 95.9%;
+  --color-sidebar-accent-foreground: 240 5.9% 10%;
+  --color-sidebar-border: 220 13% 91%;
+  --color-sidebar-ring: 217.2 91.2% 59.8%;
+}
+
+/* * {
+  scroll-behavior: smooth;
+} */
+
+.gradient-warm {
+  background: var(--gradient-warm);
+}
+
+.gradient-soft {
+  background: var(--gradient-soft);
+}
+
+.gradient-hero {
+  background: var(--gradient-hero);
+}
+
+.text-gradient {
+  background: var(--gradient-warm);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent; /* v4 standard way to achieve text fill without webkit prefix quirks in many cases, but keeping strict compatibility: */
+  -webkit-text-fill-color: transparent;
+}
+
+.shadow-soft {
+  box-shadow: var(--shadow-soft);
+}
+
+.shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
+.shadow-elevated {
+  box-shadow: var(--shadow-elevated);
+}
+
+.glass {
+  background: hsl(var(--color-card) / 0.8);
+  backdrop-filter: blur(12px);
+}
