@@ -1,0 +1,330 @@
+[
+  {
+    "key": "chrome_rainbow",
+    "name": "Chrome Rainbow",
+    "theme": "y2k",
+    "icon": "Sparkles",
+    "description": "Holographic metallic chrome with rainbow gradients",
+    "stickers": [
+      {
+        "name": "Chrome Rose",
+        "prompt": "Glossy metallic chrome rose sticker, rainbow holographic gradient, pink to purple, liquid metal texture, 3D rendering"
+      },
+      {
+        "name": "Chrome Skull",
+        "prompt": "Glossy metallic chrome skull sticker, rainbow holographic gradient, pink to silver, liquid metal texture, 3D rendering"
+      },
+      {
+        "name": "Chrome Flame",
+        "prompt": "Glossy metallic chrome flame sticker, rainbow holographic gradient, pink to blue, liquid metal texture, 3D rendering"
+      },
+      {
+        "name": "Chrome Cloud",
+        "prompt": "Glossy metallic chrome cloud sticker, rainbow holographic gradient, blue to purple, liquid metal texture, 3D rendering"
+      },
+      {
+        "name": "Chrome Music Note",
+        "prompt": "Glossy metallic chrome music note sticker, rainbow holographic gradient, black to silver, liquid metal texture, 3D rendering"
+      },
+      {
+        "name": "Chrome Smiley Flower",
+        "prompt": "Glossy metallic chrome smiley daisy flower sticker, rainbow holographic gradient, multicolor petals, yellow center, liquid metal texture, 3D rendering"
+      },
+      {
+        "name": "Chrome Lightning",
+        "prompt": "Glossy metallic chrome lightning bolt sticker, rainbow holographic gradient, gold to purple, liquid metal texture, 3D rendering"
+      },
+      {
+        "name": "Chrome Star",
+        "prompt": "Glossy metallic chrome star sticker, rainbow holographic gradient, gold sparkle, liquid metal texture, 3D rendering"
+      }
+    ]
+  },
+  {
+    "key": "soft_circles",
+    "name": "Soft Y2K Circles",
+    "theme": "y2k",
+    "icon": "Sparkles",
+    "description": "Cute circular badges with Y2K aesthetic",
+    "stickers": [
+      {
+        "name": "Disco Ball",
+        "prompt": "Pink disco ball in circle badge sticker, soft Y2K aesthetic, pastel background"
+      },
+      {
+        "name": "Cowboy Boots",
+        "prompt": "Red cowboy boots with polka dots in circle badge sticker, soft Y2K aesthetic, pastel pink background"
+      },
+      {
+        "name": "Flip Phone",
+        "prompt": "Red flip phone with text 'you have a message' in circle badge sticker, soft Y2K aesthetic"
+      },
+      {
+        "name": "Checkered Pattern",
+        "prompt": "Red and white checkered racing pattern in circle badge sticker, soft Y2K aesthetic"
+      },
+      {
+        "name": "Cherry Cowboy Boot",
+        "prompt": "Pink cowboy boot with cherry pattern in circle badge sticker, soft Y2K aesthetic"
+      },
+      {
+        "name": "She Text",
+        "prompt": "Text 'She.' in cursive on pastel circle badge sticker, soft Y2K aesthetic, pink and lavender"
+      },
+      {
+        "name": "Daisy Flowers",
+        "prompt": "Retro daisy flowers pattern in circle badge sticker, soft Y2K aesthetic, pink and orange"
+      },
+      {
+        "name": "Headphones",
+        "prompt": "Red headphones in circle badge sticker, soft Y2K aesthetic, pastel pink background"
+      }
+    ]
+  },
+  {
+    "key": "gummy_candy",
+    "name": "Gummy Candy",
+    "theme": "food",
+    "icon": "Heart",
+    "description": "Translucent gummy candies and treats",
+    "stickers": [
+      {
+        "name": "Gummy Bear",
+        "prompt": "Translucent gummy bear candy sticker, shiny colorful gelatin texture, red or green or purple"
+      },
+      {
+        "name": "Gummy Dolphin",
+        "prompt": "Translucent blue gummy dolphin candy sticker, shiny gelatin texture"
+      },
+      {
+        "name": "Gummy Worm",
+        "prompt": "Translucent gummy worm candy sticker, rainbow colors, shiny gelatin texture"
+      },
+      {
+        "name": "Gummy Dino",
+        "prompt": "Translucent green and yellow gummy dinosaur candy sticker, shiny gelatin texture"
+      },
+      {
+        "name": "Watermelon Slice",
+        "prompt": "Translucent watermelon slice gummy candy sticker, red and green gelatin texture"
+      },
+      {
+        "name": "Gummy Pepper",
+        "prompt": "Translucent green gummy pepper candy sticker, shiny gelatin texture"
+      },
+      {
+        "name": "Gummy Burger",
+        "prompt": "Translucent gummy burger candy sticker, colorful layers, shiny gelatin texture"
+      },
+      {
+        "name": "Cola Bottle",
+        "prompt": "Translucent brown cola bottle gummy candy sticker, shiny gelatin texture"
+      }
+    ]
+  },
+  {
+    "key": "funny_polaroids",
+    "name": "Funny Polaroids",
+    "theme": "vintage",
+    "icon": "Laugh",
+    "description": "Polaroid frames with funny text and doodles",
+    "stickers": [
+      {
+        "name": "Good Cop",
+        "prompt": "Polaroid sticker with teddy bear and text 'GOOD COP', black and white doodle style, taped edge"
+      },
+      {
+        "name": "Happy Hour",
+        "prompt": "Polaroid sticker with sun doodle and text 'HAPPY HOUR', black and white doodle style, taped edge"
+      },
+      {
+        "name": "Me and Your Mom",
+        "prompt": "Polaroid sticker with two happy faces and text 'ME AND YOUR MOM', black and white doodle style, taped edge"
+      },
+      {
+        "name": "The Worst Person",
+        "prompt": "Polaroid sticker with sad face and text 'THE WORST PERSON', black and white doodle style, taped edge"
+      },
+      {
+        "name": "Grocery List",
+        "prompt": "Polaroid note sticker with text 'GROCERY LIST: BEER, SNACKS, YOU', black and white doodle style, taped edge"
+      },
+      {
+        "name": "Fuck Work",
+        "prompt": "Polaroid sticker with beach palm tree and text 'FUCK WORK!', black and white doodle style, taped edge"
+      },
+      {
+        "name": "My Car",
+        "prompt": "Polaroid sticker with sad car drawing and text 'MY CAR :(', black and white doodle style, taped edge"
+      },
+      {
+        "name": "Tattoo Ideas",
+        "prompt": "Polaroid note sticker with text 'TATTOO IDEAS: -ACAB -CAKE -DOGS', black and white doodle style, taped edge"
+      }
+    ]
+  },
+  {
+    "key": "sketchy_doodles",
+    "name": "Black & White Doodles",
+    "theme": "custom",
+    "icon": "Pencil",
+    "description": "Hand-drawn black and white sketchy stickers",
+    "stickers": [
+      {
+        "name": "Teddy Bear",
+        "prompt": "Hand-drawn teddy bear sticker, black and white sketch, simple line art"
+      },
+      {
+        "name": "Mushroom",
+        "prompt": "Hand-drawn mushroom sticker, black and white sketch, cute simple style"
+      },
+      {
+        "name": "Cow",
+        "prompt": "Hand-drawn cute cow sticker, black and white sketch, simple cartoon style"
+      },
+      {
+        "name": "Bad Ideas Book",
+        "prompt": "Hand-drawn book sticker with text 'BAD IDEAS', black and white sketch"
+      },
+      {
+        "name": "Hot Sauce",
+        "prompt": "Hand-drawn hot sauce bottle sticker, black and white sketch, red label"
+      },
+      {
+        "name": "Juice Box",
+        "prompt": "Hand-drawn juice box sticker with text '5 HAPPY JUICE', black and white sketch"
+      },
+      {
+        "name": "Disco Ball Heart",
+        "prompt": "Hand-drawn disco ball in heart shape sticker, black and white with grid pattern"
+      },
+      {
+        "name": "Born Sick Text",
+        "prompt": "Hand-drawn banner sticker with text 'BORN SICK', black and white sketch, bold letters"
+      }
+    ]
+  },
+  {
+    "key": "beach_sayings",
+    "name": "Beach Vibes",
+    "theme": "nature",
+    "icon": "Waves",
+    "description": "Surf culture, beach text, and coastal lifestyle",
+    "stickers": [
+      {
+        "name": "Beach Please",
+        "prompt": "Text sticker 'Beach Please' in retro vintage font, beach aesthetic"
+      },
+      {
+        "name": "Beach Bummin",
+        "prompt": "Text sticker 'BEACH BUMMIN' in vintage letters, surf culture"
+      },
+      {
+        "name": "Aloha",
+        "prompt": "Text sticker 'Aloha' with tropical flowers, Hawaiian beach vibes"
+      },
+      {
+        "name": "Surf Shop",
+        "prompt": "Vintage surf shop logo sticker 'RON JON' style, retro beach branding"
+      },
+      {
+        "name": "Shaka Hand",
+        "prompt": "Hang loose shaka hand sign sticker, watercolor surf style, blue tones"
+      },
+      {
+        "name": "Surfboard",
+        "prompt": "Colorful surfboard sticker, beach aesthetic, surf culture"
+      },
+      {
+        "name": "Sea Turtle",
+        "prompt": "Watercolor sea turtle sticker, blue and turquoise, ocean vibes"
+      },
+      {
+        "name": "Sunshine",
+        "prompt": "Sun with face sticker, hand-drawn beach style, happy summer vibes"
+      }
+    ]
+  },
+  {
+    "key": "food_sketches",
+    "name": "Food Doodles",
+    "theme": "food",
+    "icon": "Coffee",
+    "description": "Hand-drawn black and white food illustrations",
+    "stickers": [
+      {
+        "name": "Espresso",
+        "prompt": "Hand-drawn black and white sketch of espresso cup, Italian coffee doodle"
+      },
+      {
+        "name": "Wine Glass",
+        "prompt": "Hand-drawn black and white sketch of wine glass, simple line art"
+      },
+      {
+        "name": "Pasta",
+        "prompt": "Hand-drawn black and white sketch of pasta dish, Italian food doodle"
+      },
+      {
+        "name": "Pizza Slice",
+        "prompt": "Hand-drawn black and white sketch of pizza slice, simple doodle"
+      },
+      {
+        "name": "Olive Oil",
+        "prompt": "Hand-drawn black and white sketch of olive oil bottle, Italian ingredient"
+      },
+      {
+        "name": "Lemon",
+        "prompt": "Hand-drawn black and white sketch of lemon, simple citrus doodle"
+      },
+      {
+        "name": "Basil",
+        "prompt": "Hand-drawn black and white sketch of basil leaves, herb illustration"
+      },
+      {
+        "name": "Moka Pot",
+        "prompt": "Hand-drawn black and white sketch of Italian moka coffee pot, kitchen doodle"
+      }
+    ]
+  },
+  {
+    "key": "vintage_badges",
+    "name": "Vintage Badges",
+    "theme": "vintage",
+    "icon": "Flame",
+    "description": "Retro circular pins with funny sayings and graphics",
+    "stickers": [
+      {
+        "name": "Hello Name Tag",
+        "prompt": "Red 'HELLO my name is' name tag sticker, retro badge style"
+      },
+      {
+        "name": "I'm a Star",
+        "prompt": "Vintage badge sticker with text 'I'M A STAR', retro design with stars"
+      },
+      {
+        "name": "Bad Habits",
+        "prompt": "Retro badge sticker with text 'Ask me about my BAD HABITS', vintage humor"
+      },
+      {
+        "name": "Have Nice Forever",
+        "prompt": "Retro cloud-shaped badge with text 'HAVE A NICE FOREVER', 70s style"
+      },
+      {
+        "name": "I'm a Hero",
+        "prompt": "Circular badge sticker with text 'I'm a hero', navy blue with stars"
+      },
+      {
+        "name": "Snoopy",
+        "prompt": "Vintage Snoopy character badge sticker, retro cartoon style, red border"
+      },
+      {
+        "name": "Batman",
+        "prompt": "Vintage Batman logo badge sticker, retro superhero pin"
+      },
+      {
+        "name": "I Love to Read",
+        "prompt": "Badge sticker with text 'I Love to Read' and book icon, educational retro pin"
+      }
+    ]
+  }
+]
