@@ -1,6 +1,8 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload, Sparkles, FileImage } from "lucide-react";
+import { convertHeicToPng } from "~/lib/heic-converter";
+import toast from "react-hot-toast";
 
 interface DropZoneProps {
   onFilesSelected: (files: File[]) => void;
@@ -46,11 +48,29 @@ export default function DropZone({
     [onFilesSelected],
   );
 
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
+  const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+
+    try {
       const files = Array.from(e.target.files);
-      onFilesSelected(files);
+
+      // Convert HEIC files if needed
+      const processedFilesPromises = files.map(async (file) => {
+        if (
+          file.type === "image/heic" ||
+          file.name.toLowerCase().endsWith(".heic")
+        ) {
+          return await convertHeicToPng(file);
+        }
+        return file;
+      });
+
+      const processedFiles = await Promise.all(processedFilesPromises);
+      onFilesSelected(processedFiles);
       e.target.value = "";
+    } catch (error) {
+      console.error("Error processing files:", error);
+      toast.error("Failed to process some files");
     }
   };
 

@@ -57,4 +57,33 @@ export const backgroundPatternRouter = createTRPCRouter({
         });
       }
     }),
+    deleteBackgroundPattern: protectedProcedure
+      .input(
+        z.object({
+          ids: z.array(z.string()),
+        }),
+      )
+      .mutation(async ({ input, ctx }) => {
+        try {
+          const deleted = await ctx.db.backgroundPattern.deleteMany({
+            where: {
+              id: {
+                in: input.ids,
+              },
+            },
+          });
+          const failed = deleted.count - input.ids.length;
+          if (failed > 0) {
+            console.log("Failed to delete patterns", failed);
+          }
+          console.log("Acknowledged deletion of patterns", deleted.count);
+          return deleted;
+        } catch (error) {
+          console.error("Error deleting pattern:", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to delete pattern",
+          });
+        }
+      }),
 });

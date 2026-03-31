@@ -282,6 +282,33 @@ export const folderRouter = createTRPCRouter({
             );
           }
         }
+        // update the starred folder if exists
+        if(folderId){
+          try {
+            const existingStarredFolder = await ctx.db.starredFolder.findFirst({
+              where: {
+                folderId: folderId,
+              },
+            });
+            if (existingStarredFolder) {
+              await ctx.db.starredFolder.update({
+                where: {
+                  userId_folderId:{
+                    userId: ctx.session.user.id,
+                    folderId: folderId,
+                  }
+                },
+                data: {
+                  folderName: newName,
+                  folderPath: response.path_display
+                },
+              });
+              console.log(`Updated starred folder name for folder: ${folderId}`);
+            }
+          } catch (error) {
+            console.log("ERROR updating starred folder:", error);
+          }
+        }
 
         return {
           success: true,

@@ -10,6 +10,7 @@ import { userRouter } from "./routers/user";
 import { polarRouter } from "./routers/polar";
 import { userStickerPacksRouter } from "./routers/user-sticker-packs";
 import { backgroundPatternRouter } from "./routers/background-pattern";
+import { starredFolderRouter } from "./routers/starred-folder";
 
 /**
  * This is the primary router for your server.
@@ -28,6 +29,7 @@ export const appRouter = createTRPCRouter({
   polar: polarRouter,
   userStickerPacks: userStickerPacksRouter,
   backgroundPattern: backgroundPatternRouter,
+  starredFolder: starredFolderRouter,
 });
 
 // export type definition of API

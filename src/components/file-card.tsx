@@ -34,6 +34,9 @@ const FileCard = ({
   isSelected,
   onClearSelection,
   index,
+  selectedItems,
+  folders,
+  files,
 }: any) => {
   const IMAGE = file.name.split(".").pop()?.toLowerCase();
   const [_filename] = useQueryState("name", parseAsString);
@@ -51,6 +54,7 @@ const FileCard = ({
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [showPasteDialog, setShowPasteDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const handleDoubleClick = () => {
     // Handle file open logic
@@ -89,12 +93,6 @@ const FileCard = ({
     };
   }, []);
 
-  //   const handleDownload = () => {
-  //     setShowDropdown(false);
-  //     // Implement download logic
-  //     console.log("Downloading file:", file.name);
-  //   };
-
   const deleteFileMutation = api.folder.deleteFile.useMutation({
     onSuccess: (data) => {
       toast.success(data.message);
@@ -120,6 +118,25 @@ const FileCard = ({
   });
 
   const { addToClipboard } = useClipboardStore();
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    // Files can't be drop targets for moving files/folders
+  };
 
   const handleDelete = () => {
     setShowDropdown(false);
@@ -211,6 +228,101 @@ const FileCard = ({
       onMouseLeave={() => setIsHovered(false)}
       className={`relative ${deleteFileMutation.isPending ? "opacity-30" : ""}`}
       style={{ userSelect: "none" }}
+      draggable
+      onDragStart={(e: any) => {
+        let itemsToMove: any[] = [];
+
+        if (isSelected && selectedItems && selectedItems.size > 0) {
+          // If this item is selected, drag all selected items
+          itemsToMove = [
+            ...folders.filter((f: any) => selectedItems.has(f.name)).map((f: any) => ({
+              name: f.name,
+              path: f.path,
+              id: f.id,
+              type: "folder",
+            })),
+            ...files.filter((f: any) => selectedItems.has(f.name)).map((f: any) => ({
+              name: f.name,
+              path: f.path || `/${f.name}`,
+              id: f.id,
+              type: "file",
+            })),
+          ];
+        } else {
+          // If this item is not selected, drag only this file
+          itemsToMove = [{ name: file.name, path: file.path || `/${file.name}`, id: file.id, type: "file" }];
+        }
+
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("application/json", JSON.stringify(itemsToMove));
+
+        // FIX: Custom drag image for multiple items
+        if (itemsToMove.length > 1) {
+          const scale = 0.6; // Reduce size to 60%
+          const rect = e.currentTarget.getBoundingClientRect();
+
+          // Create a container for the custom drag image
+          const dragImageContainer = document.createElement("div");
+          dragImageContainer.style.position = "absolute";
+          dragImageContainer.style.top = "-1000px";
+          dragImageContainer.style.left = "-1000px";
+          dragImageContainer.style.pointerEvents = "none";
+          dragImageContainer.style.zIndex = "9999";
+          
+          // Set container size to the scaled dimensions
+          dragImageContainer.style.width = `${rect.width * scale}px`;
+          dragImageContainer.style.height = `${rect.height * scale}px`;
+
+          // Clone the current card to use as the base visual
+          const clone = e.currentTarget.cloneNode(true) as HTMLElement;
+          
+          // Lock dimensions to prevent layout shifts and apply scale
+          clone.style.width = `${rect.width}px`;
+          clone.style.height = `${rect.height}px`;
+          clone.style.transform = `scale(${scale})`;
+          clone.style.transformOrigin = "top left";
+          clone.style.position = "absolute";
+          clone.style.top = "0";
+          clone.style.left = "0";
+          clone.style.opacity = "1";
+          clone.style.transition = "none"; // Disable animations
+
+          dragImageContainer.appendChild(clone);
+
+          // Create a badge to show the count
+          const badge = document.createElement("div");
+          badge.innerText = `${itemsToMove.length}`;
+          badge.style.position = "absolute";
+          // Position relative to the scaled container
+          badge.style.bottom = "-10px";
+          badge.style.right = "-10px";
+          badge.style.backgroundColor = "#ef4444"; // Red badge
+          badge.style.color = "white";
+          badge.style.borderRadius = "9999px";
+          badge.style.width = "24px";
+          badge.style.height = "24px";
+          badge.style.display = "flex";
+          badge.style.alignItems = "center";
+          badge.style.justifyContent = "center";
+          badge.style.fontWeight = "bold";
+          badge.style.fontSize = "12px";
+          badge.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
+
+          dragImageContainer.appendChild(badge);
+
+          document.body.appendChild(dragImageContainer);
+
+          // Set the custom drag image
+          e.dataTransfer.setDragImage(dragImageContainer, 0, 0);
+
+          // Clean up the element after the browser captures the image
+          requestAnimationFrame(() => {
+            if (document.body.contains(dragImageContainer)) {
+              document.body.removeChild(dragImageContainer);
+            }
+          });
+        }
+      }}
     >
       <Card
         className={`group cursor-pointer overflow-hidden bg-white/80 py-0 backdrop-blur-sm hover:shadow-xl ${

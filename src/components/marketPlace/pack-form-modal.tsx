@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
-import { X, Plus, ImageIcon } from "lucide-react";
-import type { StickerPack, StickerPackFormData } from "~/types";
+import { X, Plus, ImageIcon, LinkIcon } from "lucide-react";
+import type { SocialLink, StickerPack, StickerPackFormData } from "~/types";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
+import { iconMap } from "./Pack-card";
+import type { UserStickerPacks } from "generated/prisma";
 
 interface PackFormModalProps {
   open: boolean;
   isPending: boolean;
   onOpenChange: (open: boolean) => void;
-  pack?: StickerPack | null;
+  pack?: UserStickerPacks | null;
   onSubmit: (data: StickerPackFormData) => void;
 }
 
@@ -29,6 +31,8 @@ const SUGGESTED_TAGS = [
   "memes",
 ];
 
+const SUGGESTED_PLATFORMS = ["Twitter", "Instagram", "TikTok", "Telegram", "Website","Facebook"];
+
 const PackFormModal = ({
   open,
   isPending,
@@ -43,8 +47,13 @@ const PackFormModal = ({
     purchaseLink: "",
     price: 0,
     tags: [],
+    socialLinks: []
   });
   const [tagInput, setTagInput] = useState("");
+
+  // State for new social link input
+  const [newLinkPlatform, setNewLinkPlatform] = useState("");
+  const [newLinkUrl, setNewLinkUrl] = useState("");
 
   const isEditing = !!pack;
 
@@ -57,6 +66,7 @@ const PackFormModal = ({
         purchaseLink: pack.purchaseLink || "",
         price: pack.price,
         tags: pack.tags,
+        socialLinks: Array.isArray(pack.socialLinks) ? pack.socialLinks as StickerPack["socialLinks"] : [] 
       });
     } else {
       setFormData({
@@ -66,6 +76,7 @@ const PackFormModal = ({
         purchaseLink: "",
         price: 0,
         tags: [],
+        socialLinks: []
       });
     }
     setTagInput("");
@@ -86,6 +97,37 @@ const PackFormModal = ({
     setFormData((prev) => ({
       ...prev,
       tags: prev.tags.filter((tag) => tag !== tagToRemove),
+    }));
+  };
+
+
+  const handleAddSocialLink = () => {
+    if (!newLinkPlatform.trim() || !newLinkUrl.trim()) return;
+
+    // Basic URL validation
+    try {
+      new URL(newLinkUrl);
+    } catch {
+      alert("Please enter a valid URL");
+      return;
+    }
+
+    const newLink: SocialLink = { platform: newLinkPlatform, url: newLinkUrl };
+
+    setFormData((prev) => ({
+      ...prev,
+      socialLinks: [...prev.socialLinks, newLink],
+    }));
+
+    setNewLinkPlatform("");
+    setNewLinkUrl("");
+  };
+
+
+  const handleRemoveSocialLink = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      socialLinks: prev.socialLinks.filter((_, i) => i !== index),
     }));
   };
 
@@ -282,6 +324,77 @@ const PackFormModal = ({
                 ),
               )}
             </div>
+          </div>
+
+          {/* Social Media Links Section - NEW */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Social Media / Links</Label>
+
+            {/* Inputs to add new link */}
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Input
+                placeholder="Platform (e.g. Twitter)"
+                value={newLinkPlatform}
+                onChange={(e) => setNewLinkPlatform(e.target.value)}
+                className="h-10 sm:w-36"
+                list="platform-suggestions"
+              />
+              <datalist id="platform-suggestions">
+                {SUGGESTED_PLATFORMS.map(p => <option key={p} value={p} />)}
+              </datalist>
+
+              <div className="relative flex-1">
+                <LinkIcon className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                <Input
+                  placeholder="https://..."
+                  value={newLinkUrl}
+                  onChange={(e) => setNewLinkUrl(e.target.value)}
+                  className="h-10 pl-9"
+                />
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={handleAddSocialLink}
+                className="shrink-0"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Display Added Links */}
+            {formData.socialLinks.length > 0 && (
+              <div className="space-y-2">
+                {formData.socialLinks.map((link, index) => {
+                  // Get the icon or fallback to LinkIcon
+                  const Icon = iconMap[link.platform.toLowerCase()] || LinkIcon;
+
+                  return (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between gap-2 rounded-md bg-muted p-2 text-sm"
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        {/* Icon Display with Tooltip */}
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm bg-background" title={link.platform}>
+                          <Icon className="h-3.5 w-3.5 text-primary" />
+                        </div>
+                        <span className="text-muted-foreground truncate text-xs">{link.url}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSocialLink(index)}
+                        className="text-muted-foreground hover:text-destructive rounded-full p-1 hover:bg-background"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Actions */}

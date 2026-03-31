@@ -13,6 +13,7 @@ import {
   Settings,
   Palette,
   PackagePlus,
+  Star,
 } from "lucide-react";
 import { authClient } from "~/server/better-auth/client";
 import DashboardIcon from "./dashboard-icon";
@@ -40,6 +41,12 @@ const navItems: NavItem[] = [
     title: "My Folders",
     url: "/dashboard/folders",
     icon: DashboardIcon,
+    disabled: false,
+  },
+  {
+    title: "Starred",
+    url: "/dashboard/starred",
+    icon: Star,
     disabled: false,
   },
   {

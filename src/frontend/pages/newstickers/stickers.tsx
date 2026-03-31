@@ -36,14 +36,14 @@ const Stickers = () => {
 
   const buildFullPrompt = () => {
     const Style = selectedStyle?.name
-    let fullPrompt = `${prompt} sticker`;
+    let fullPrompt = `${prompt}`;
 
     if (Style) {
       fullPrompt += `, ${Style}`;
     }
 
     fullPrompt +=
-      `, high quality, ${removeBackground ? 'transparent background concept' : ''} isolated object`;
+      `, high quality, ${removeBackground ? 'transparent background concept' : ''} isolated object and single object`;
 
     return fullPrompt;
   };

@@ -82,12 +82,18 @@ export interface StickerPack {
   purchaseLink?: string | null;
   price: number;
   tags: string[];
+  socialLinks: SocialLink[];
   favoriteUserIds: string[];
   createdById: string;
   createdBy?: User;
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type SocialLink = {
+  platform: string;
+  url: string;
+};
 
 export type StickerPackFormData = {
   title: string;
@@ -96,4 +102,5 @@ export type StickerPackFormData = {
   purchaseLink: string;
   price: number;
   tags: string[];
+  socialLinks: SocialLink[];
 };

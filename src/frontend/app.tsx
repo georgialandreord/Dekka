@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes, Navigate } from "react-router";
 import Folders from "~/frontend/pages/folders";
 import Folder from "./pages/folder/folder";
+import StarredFolders from "./pages/starred/starred-folders";
 import { ProtectedRoute } from "~/frontend/components/protected-route";
 import { DashboardLayout } from "./layouts/dashboard-layout";
 import { FolderLayout } from "./layouts/folder-layout";
@@ -77,6 +78,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Stickers />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="starred"
+              element={
+                <ProtectedRoute>
+                  <StarredFolders />
                 </ProtectedRoute>
               }
             />

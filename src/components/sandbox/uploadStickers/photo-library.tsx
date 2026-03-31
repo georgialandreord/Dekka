@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
-import { Check, Download, Image, Loader2, Square } from "lucide-react";
+import { Check, Download, Image, Loader2, Square, Trash2 } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import JSZip from "jszip";
+import { api } from "~/trpc/react";
 
 interface Photo {
   id: string;
@@ -17,6 +18,8 @@ interface PhotoLibraryProps {
   onPhotoClick?: (photo: Photo) => void;
   allowSelection?: boolean;
   isDownloadzip?: boolean;
+  deletePhotos?: (ids: string[]) => Promise<{ count: number }>;
+  isDeleting?: boolean;
 }
 
 export default function PhotoLibrary({
@@ -24,10 +27,13 @@ export default function PhotoLibrary({
   isLoading,
   onPhotoClick,
   allowSelection = true,
-  isDownloadzip
+  isDownloadzip,
+  deletePhotos,
+  isDeleting
 }: PhotoLibraryProps) {
   const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
   const [isDownloading, setIsDownloading] = useState(false);
+  const utils = api.useUtils();
 
   const togglePhotoSelection = (photoId: string) => {
     setSelectedPhotos((prev) => {
@@ -146,6 +152,12 @@ export default function PhotoLibrary({
     }
   };
 
+  const deleteSelectedPhotos = async () => {
+    const ids = Array.from(selectedPhotos);
+    await deletePhotos?.(ids);
+    setSelectedPhotos(new Set());
+  }
+
   if (isLoading) {
     return (
       <motion.div
@@ -230,6 +242,19 @@ export default function PhotoLibrary({
                     <Download className="h-3 w-3" />
                   )}
                   Download{" "}
+                  {selectedPhotos.size > 1 ? `(${selectedPhotos.size})` : ""}
+                </button>
+                <button
+                  onClick={deleteSelectedPhotos}
+                  disabled={isDeleting}
+                  className="bg-primary hover:bg-primary/90 cursor-pointer disabled:bg-muted disabled:text-muted-foreground text-secondary flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors"
+                >
+                  {isDeleting ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-3 w-3" />
+                  )}
+                  Delete{" "}
                   {selectedPhotos.size > 1 ? `(${selectedPhotos.size})` : ""}
                 </button>
               </>

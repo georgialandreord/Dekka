@@ -5,6 +5,7 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { authClient } from "~/server/better-auth/client";
 import { api } from "~/trpc/react";
+import { convertHeicToPng } from "~/lib/heic-converter";
 
 interface UserProfileData {
   firstName: string;
@@ -134,32 +135,68 @@ const UserProfile = () => {
     bannerInputRef.current?.click();
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
-    if (file && file.type.startsWith("image/")) {
-      setSelectedFile(file);
+    if (!file) return;
 
-      // Preview image locally
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setUserData((prev) => ({ ...prev, avatarUrl: result }));
-      };
-      reader.readAsDataURL(file);
+    try {
+      // Convert HEIC if needed
+      let processedFile = file;
+      if (
+        file.type === "image/heic" ||
+        file.name.toLowerCase().endsWith(".heic")
+      ) {
+        processedFile = await convertHeicToPng(file);
+      }
+
+      if (processedFile.type.startsWith("image/")) {
+        setSelectedFile(processedFile);
+
+        // Preview image locally
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const result = e.target?.result as string;
+          setUserData((prev) => ({ ...prev, avatarUrl: result }));
+        };
+        reader.readAsDataURL(processedFile);
+      }
+    } catch (err) {
+      console.error("Error processing file:", err);
+      toast.error("Failed to process image file");
     }
   };
 
-  const handleBannerChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBannerChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
-    if (file && file.type.startsWith("image/")) {
-      setSelectedBannerFile(file);
+    if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setUserData((prev) => ({ ...prev, bannerUrl: result }));
-      };
-      reader.readAsDataURL(file);
+    try {
+      // Convert HEIC if needed
+      let processedFile = file;
+      if (
+        file.type === "image/heic" ||
+        file.name.toLowerCase().endsWith(".heic")
+      ) {
+        processedFile = await convertHeicToPng(file);
+      }
+
+      if (processedFile.type.startsWith("image/")) {
+        setSelectedBannerFile(processedFile);
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const result = e.target?.result as string;
+          setUserData((prev) => ({ ...prev, bannerUrl: result }));
+        };
+        reader.readAsDataURL(processedFile);
+      }
+    } catch (err) {
+      console.error("Error processing file:", err);
+      toast.error("Failed to process image file");
     }
   };
 
@@ -168,7 +205,7 @@ const UserProfile = () => {
       <div className="animate-fade-in mx-auto max-w-4xl">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-semibold tracking-tight text-accent-foreground">
+          <h1 className="text-accent-foreground text-2xl font-semibold tracking-tight">
             Profile Settings
           </h1>
         </div>
@@ -176,7 +213,7 @@ const UserProfile = () => {
         {/* Main Card */}
         <div className="card-shadow border-border bg-card hover:shadow-card-hover overflow-hidden rounded-xl border transition-shadow duration-300">
           {/* Banner Section */}
-          <div className="group relative h-40 z-0">
+          <div className="group relative z-0 h-40">
             <input
               type="file"
               ref={bannerInputRef}
@@ -240,7 +277,7 @@ const UserProfile = () => {
                 </button>
               </div>
 
-              <div className="mb-2 z-20 relative">
+              <div className="relative z-20 mb-2">
                 <h2 className="text-foreground text-xl font-semibold">
                   {`${userData.firstName} ${userData.lastName}` || "Your Name"}
                 </h2>

@@ -587,6 +587,43 @@ export default function Upload() {
     toast(`Sticker selected: ${photo.fileName}`);
   };
 
+  const deletePhotosMutation = api.sticker.deleteStickers.useMutation(
+    {
+      onSuccess: (data) => {
+        toast.success("Photos deleted successfully");
+        utils.sticker.getAllStickers.invalidate();
+      },
+      onError: (error) => {
+        toast.error("Failed to delete photos");
+      },
+    }
+  );
+
+  const deletePatternsMutation = api.backgroundPattern.deleteBackgroundPattern.useMutation(
+    {
+      onSuccess: (data) => {
+        toast.success("Patterns deleted successfully");
+        utils.backgroundPattern.getAllPatterns.invalidate();
+      },
+      onError: (error) => {
+        toast.error("Failed to delete patterns");
+      },
+    }
+  );
+
+  const handleDeletePatterns = async (ids: string[]) => {
+    return await deletePatternsMutation.mutateAsync({
+      ids: ids,
+    });
+  };
+
+  const handleDeletePhotos = async (ids: string[]) => {
+      return await deletePhotosMutation.mutateAsync({
+        ids: ids,
+      });
+  };
+
+
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -674,7 +711,9 @@ export default function Upload() {
                     }
                     isLoading={isStickerLoading}
                     onPhotoClick={handlePhotoClick}
-                    isDownloadzip={false}
+                    isDownloadzip={true}
+                    deletePhotos={handleDeletePhotos}
+                    isDeleting={deletePhotosMutation.isPending}
                   />
                 </motion.section>
               )}
@@ -738,7 +777,9 @@ export default function Upload() {
                     onPhotoClick={(photo) =>
                       toast(`Pattern selected: ${photo.fileName}`)
                     }
-                    isDownloadzip={false}
+                    isDownloadzip={true}
+                    deletePhotos={handleDeletePatterns}
+                    isDeleting={deletePatternsMutation.isPending}
                   />
                 </motion.section>
               )}

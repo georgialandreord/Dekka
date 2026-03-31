@@ -9,6 +9,7 @@ export const polarRouter = createTRPCRouter({
     try {
       const products = await polarClient.products.list({
         isArchived: false,
+        isRecurring: false
       });
 
       return products.result.items;
@@ -21,4 +22,21 @@ export const polarRouter = createTRPCRouter({
       });
     }
   }),
+  getPlans: protectedProcedure.query(async () => {
+    try {
+      const products = await polarClient.products.list({
+        isArchived: false,
+        isRecurring:true
+      });
+
+      return products.result.items;
+    } catch (error) {
+      console.error("Polar product fetch failed", error);
+
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to fetch products",
+      });
+    }
+  })
 });

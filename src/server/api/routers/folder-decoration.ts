@@ -11,6 +11,8 @@ const decorationSchema = z.object({
   height: z.number(),
   rotation: z.number().default(0),
   effects: z.array(z.string()).default([]),
+  sparkleColor:z.string().optional(),
+  glitterColor: z.string().optional(),
   zIndex: z.number(),
   type: z.string(),
   content: z.string(),

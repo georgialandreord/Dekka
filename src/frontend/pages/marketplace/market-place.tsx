@@ -1,3 +1,4 @@
+import type { UserStickerPacks } from "generated/prisma";
 import { Package, Plus, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
@@ -19,8 +20,8 @@ const MarketPlace = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTag, setSelectedTag] = useState("all");
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [editingPack, setEditingPack] = useState<StickerPack | null>(null);
-  const [deletingPack, setDeletingPack] = useState<StickerPack | null>(null);
+  const [editingPack, setEditingPack] = useState<UserStickerPacks | null>(null);
+  const [deletingPack, setDeletingPack] = useState<UserStickerPacks | null>(null);
 
   const { data: packsData = [], isLoading } =
     api.userStickerPacks.getPacks.useQuery({
@@ -91,16 +92,16 @@ const MarketPlace = () => {
     deleteMutation.mutate({ id: deletingPack.id });
   };
 
-  const openEditModal = (pack: StickerPack) => {
+  const openEditModal = (pack: UserStickerPacks) => {
     setEditingPack(pack);
     setIsFormModalOpen(true);
   };
 
-  const openDeleteModal = (pack: StickerPack) => {
+  const openDeleteModal = (pack: UserStickerPacks) => {
     setDeletingPack(pack);
   };
 
-  const getIsFavorited = (pack: StickerPack) => {
+  const getIsFavorited = (pack: UserStickerPacks) => {
     return !!session && pack.favoriteUserIds.includes(session.user.id);
   };
 
@@ -112,10 +113,6 @@ const MarketPlace = () => {
             <h1 className="bg-primary mb-2 bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
               Sticker Marketplace
             </h1>
-            <p className="text-muted-foreground text-lg">
-              Discover amazing sticker packs from talented artists around the
-              world
-            </p>
           </div>
           <Button
             onClick={() => {
@@ -161,6 +158,7 @@ const MarketPlace = () => {
                 </Button>
               ))}
             </div>
+            
           </div>
 
           {/* Packs Grid */}

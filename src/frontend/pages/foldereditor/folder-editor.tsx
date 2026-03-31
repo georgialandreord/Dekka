@@ -22,6 +22,8 @@ interface Decoration {
   height: number;
   rotation: number;
   effects: string[];
+  sparkleColor?: string;
+  glitterColor?: string;
   zIndex: number;
   type: string;
   content: string;

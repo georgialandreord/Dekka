@@ -1,18 +1,31 @@
-import { ExternalLink, MoreVertical, Pencil, Trash2 } from "lucide-react";
-import type { StickerPack } from "~/types";
+import { ExternalLink, Facebook, Globe, Instagram, Link2, MoreVertical, Music, Pencil, Send, Trash2, Twitter, Youtube } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Button } from "../ui/button";
 import { motion } from "framer-motion";
+import type { UserStickerPacks } from "generated/prisma";
+import type { StickerPack } from "~/types";
 
 interface PackCardProps {
-    pack: StickerPack;
+    pack: UserStickerPacks;
     isOwner?: boolean;
     index: number;
-    onEdit?: (pack: StickerPack) => void;
-    onDelete?: (pack: StickerPack) => void;
+    onEdit?: (pack: UserStickerPacks) => void;
+    onDelete?: (pack: UserStickerPacks) => void;
 }
+
+export const iconMap: Record<string, React.ElementType> = {
+    twitter: Twitter,
+    x: Twitter,
+    instagram: Instagram,
+    youtube: Youtube,
+    tiktok: Music,
+    telegram: Send,
+    website: Globe,
+    web: Globe,
+    facebook: Facebook,
+};
 
 const PackCard = ({ pack, isOwner = false, index, onEdit, onDelete }: PackCardProps) => {
     const handlePurchaseLink = () => {
@@ -20,6 +33,7 @@ const PackCard = ({ pack, isOwner = false, index, onEdit, onDelete }: PackCardPr
             window.open(pack.purchaseLink, "_blank", "noopener,noreferrer");
         }
     };
+    const socialLinks = Array.isArray(pack.socialLinks) ? pack.socialLinks as StickerPack["socialLinks"] : [];
 
     return (
         <motion.div
@@ -119,6 +133,31 @@ const PackCard = ({ pack, isOwner = false, index, onEdit, onDelete }: PackCardPr
                             </Badge>
                         )}
                     </div>
+
+                    {/* Social Links Section - NEW */}
+                    {socialLinks && socialLinks.length > 0 && (
+                        <div className="mt-3 flex items-center gap-3 border-t border-border pt-3">
+                            {socialLinks.map((link, idx) => {
+                                // Find the correct icon component
+                                const platformKey = link.platform.toLowerCase();
+                                const IconComponent = iconMap[platformKey] || Link2; // Fallback to Link2 icon
+
+                                return (
+                                    <a
+                                        key={idx}
+                                        href={link.url.startsWith('http') ? link.url : `https://${link.url}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="text-primary hover:text-primary transition-colors"
+                                        title={link.platform} // Tooltip shows full name on hover
+                                    >
+                                        <IconComponent className="h-4 w-4" />
+                                    </a>
+                                );
+                            })}
+                        </div>
+                    )}
 
                     {/* Purchase link indicator */}
                     {pack?.purchaseLink && (

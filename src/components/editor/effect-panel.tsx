@@ -3,11 +3,17 @@ import { ScrollArea } from "~/components/ui/scroll-area";
 import { Alert, AlertDescription } from "~/components/ui/alert";
 import { EFFECTS } from "~/mockdata";
 
-const EffectsPanel = ({
-  folder,
-  selectedDecorationId,
-  updateDecoration,
-}: any) => {
+const EFFECT_COLORS = [
+  "#fbbf24", // Yellow
+  "#ec4899", // Pink
+  "#3b82f6", // Blue
+  "#10b981", // Green
+  "#8b5cf6", // Purple
+  "#ef4444", // Red
+  "#ffffff", // White
+];
+
+const EffectsPanel = ({ folder, selectedDecorationId, updateDecoration }: any) => {
   const selectedDecoration = folder.decorations?.find(
     (d: { id: any }) => d.id === selectedDecorationId,
   );
@@ -23,6 +29,16 @@ const EffectsPanel = ({
       : [...currentEffects, effectId];
 
     updateDecoration(selectedDecorationId, { effects: newEffects });
+  };
+
+  const handleColorChange = (type: 'sparkle' | 'glitter', color: string) => {
+    if (!selectedDecoration) return;
+    
+    if (type === 'sparkle') {
+      updateDecoration(selectedDecorationId, { sparkleColor: color });
+    } else {
+      updateDecoration(selectedDecorationId, { glitterColor: color });
+    }
   };
 
   const hasEffect = (effectId: string) => {
@@ -49,22 +65,65 @@ const EffectsPanel = ({
           </Alert>
         ) : (
           <div className="space-y-3">
+            
+            {/* Sparkle Color Picker - Shows only when Sparkles is active */}
+            {hasEffect("sparkles") && (
+              <div className="border-border bg-yellow-50 dark:bg-yellow-950/20 mb-4 rounded-lg border p-4">
+                <h4 className="text-foreground mb-3 text-sm font-semibold flex items-center gap-2">
+                   ✨ Sparkle Color
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {EFFECT_COLORS.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => handleColorChange('sparkle', color)}
+                      className={`h-8 w-8 rounded-full transition-all hover:scale-110 ${
+                        (selectedDecoration.sparkleColor || "#fbbf24") === color
+                          ? "ring-2 ring-purple-600 ring-offset-2 scale-110"
+                          : "border border-gray-300"
+                      }`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Glitter Color Picker - Shows only when Glitter is active */}
+            {hasEffect("glitter") && (
+              <div className="border-border bg-pink-50 dark:bg-pink-950/20 mb-4 rounded-lg border p-4">
+                <h4 className="text-foreground mb-3 text-sm font-semibold flex items-center gap-2">
+                   💖 Glitter Color
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {EFFECT_COLORS.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => handleColorChange('glitter', color)}
+                      className={`h-8 w-8 rounded-full transition-all hover:scale-110 ${
+                        (selectedDecoration.glitterColor || "#ec4899") === color
+                          ? "ring-2 ring-purple-600 ring-offset-2 scale-110"
+                          : "border border-gray-300"
+                      }`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Existing Selected Decoration Info */}
             <div className="border-border bg-muted mb-6 rounded-lg border p-4">
               <div className="mb-2 flex items-center gap-2">
                 <div className="bg-primary h-2 w-2 animate-pulse rounded-full" />
-                <p className="text-foreground text-sm font-semibold">
-                  Selected
-                </p>
+                <p className="text-foreground text-sm font-semibold">Selected</p>
               </div>
               <p className="text-muted-foreground text-xs">
-                Type:{" "}
-                <span className="font-medium">{selectedDecoration.type}</span>
-              </p>
-              <p className="text-muted-foreground mt-1 text-xs">
-                Click effects to toggle on/off
+                Type: <span className="font-medium">{selectedDecoration.type}</span>
               </p>
             </div>
 
+            {/* Effects List */}
             {EFFECTS.map((effect) => (
               <button
                 key={effect.id}
@@ -75,6 +134,7 @@ const EffectsPanel = ({
                     : "border-border bg-card hover:bg-accent/80 border"
                 }`}
               >
+                {/* ... keep existing effect button UI ... */}
                 <div
                   className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl text-2xl ${
                     hasEffect(effect.id)
@@ -85,11 +145,8 @@ const EffectsPanel = ({
                   {effect.preview}
                 </div>
                 <div className="flex-1 text-left">
-                  <h4
-                    className={`flex items-center gap-2 text-base font-bold ${
-                      hasEffect(effect.id)
-                        ? "text-primary-foreground"
-                        : "text-foreground"
+                  <h4 className={`flex items-center gap-2 text-base font-bold ${
+                      hasEffect(effect.id) ? "text-primary-foreground" : "text-foreground"
                     }`}
                   >
                     {effect.name}
@@ -99,11 +156,8 @@ const EffectsPanel = ({
                       </span>
                     )}
                   </h4>
-                  <p
-                    className={`mt-1 text-sm ${
-                      hasEffect(effect.id)
-                        ? "text-primary-foreground/80"
-                        : "text-muted-foreground"
+                  <p className={`mt-1 text-sm ${
+                      hasEffect(effect.id) ? "text-primary-foreground/80" : "text-muted-foreground"
                     }`}
                   >
                     {effect.description}
@@ -111,20 +165,11 @@ const EffectsPanel = ({
                 </div>
               </button>
             ))}
-
-            {selectedDecoration.effects &&
-              selectedDecoration.effects.length > 0 && (
-                <div className="border-success/20 bg-success/10 mt-6 rounded-lg border p-4">
-                  <p className="text-success-foreground text-sm font-medium">
-                    ✓ {selectedDecoration.effects.length} effect
-                    {selectedDecoration.effects.length > 1 ? "s" : ""} active
-                  </p>
-                </div>
-              )}
           </div>
         )}
       </ScrollArea>
     </div>
   );
 };
+
 export default EffectsPanel;

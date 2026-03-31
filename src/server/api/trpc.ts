@@ -22,6 +22,7 @@ import {
   type FileSystemClient,
   type PLATFORM,
 } from "~/server/lib/file-system-client";
+import { polarClient } from "../better-auth/config";
 /**
  * 1. CONTEXT
  *
@@ -215,3 +216,20 @@ export const protectedProcedure = t.procedure
       },
     });
   });
+
+  export const subscribedProcedure = protectedProcedure.use(
+    async ({ ctx, next }) => {
+      const customer = await polarClient.customers.getStateExternal({
+        externalId: ctx.session.user.id,
+      });
+  
+      if (
+        !customer.activeSubscriptions ||
+        customer.activeSubscriptions.length === 0
+      ) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not subscribed" });
+      }
+  
+      return next({ ctx: { ...ctx, customer } });
+    }
+  );

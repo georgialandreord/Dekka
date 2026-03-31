@@ -26,6 +26,7 @@ model User {
   sessions          Session[]
   accounts          Account[]
   folderDecorations FolderDecoration[]
+  starredFolders    StarredFolder[]
 
   banner             String?
   themePacks         ThemePacks[]
@@ -99,20 +100,21 @@ model Verification {
 }
 
 model FolderDecoration {
-  id                    String       @id @default(auto()) @map("_id") @db.ObjectId
-  folderId              String?      @unique
+  id                    String           @id @default(auto()) @map("_id") @db.ObjectId
+  folderId              String?          @unique
   name                  String
   color                 String
   backgroundPattern     String
-  backgroundPatternSize Float?       @default(100)
+  backgroundPatternSize Float?           @default(100)
   thumbnail             String?
-  createdDate           DateTime     @default(now())
-  updatedDate           DateTime     @updatedAt
+  createdDate           DateTime         @default(now())
+  updatedDate           DateTime         @updatedAt
   createdBy             String
-  isSample              Boolean      @default(false)
+  isSample              Boolean          @default(false)
   decorations           Decoration[]
-  createdByUser         User?        @relation(fields: [createdBy], references: [id])
-  platform              String       @default("dropbox")
+  createdByUser         User?            @relation(fields: [createdBy], references: [id])
+  platform              String           @default("dropbox")
+  starredFolders        StarredFolder[]
 
   @@map("folder_decoration")
 }
@@ -126,6 +128,8 @@ model Decoration {
   height                 Float
   rotation               Float            @default(0)
   effects                String[]         @default([])
+  glitterColor           String           @default("")
+  sparkleColor           String           @default("")
   zIndex                 Int
   type                   String
   content                String
@@ -213,6 +217,7 @@ model UserStickerPacks {
   purchaseLink    String?
   price           Float    @default(0)
   tags            String[] @default([])
+  socialLinks     Json     @default("[]")
   favoriteUserIds String[] @default([])
   createdById     String
   createdBy       User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
@@ -232,4 +237,22 @@ model BackgroundPattern {
   updatedAt DateTime @updatedAt
 
   @@map("background_pattern")
+}
+
+model StarredFolder {
+  id                  String            @id @default(auto()) @map("_id") @db.ObjectId
+  userId              String
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folderId            String
+  platform            String            @default("dropbox")
+  folderName          String
+  folderPath          String
+  decoration          FolderDecoration? @relation(fields: [folderDecorationId], references: [id], onDelete: SetNull)
+  folderDecorationId  String?           @db.ObjectId
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  @@unique([userId, folderId])
+  @@index([userId])
+  @@map("starred_folder")
 }

@@ -14,6 +14,14 @@ const PackInputSchema = z.object({
   purchaseLink: z.string().optional(),
   price: z.number().default(0),
   tags: z.array(z.string()).default([]),
+  socialLinks: z
+    .array(
+      z.object({
+        platform: z.string(),
+        url: z.string().url(),
+      }),
+    )
+    .optional(),
 });
 
 export const userStickerPacksRouter = createTRPCRouter({

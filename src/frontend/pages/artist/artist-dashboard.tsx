@@ -24,6 +24,16 @@ const ArtistDashboard = () => {
   const { data: userUplaodImages, isLoading: isImagesLoading } =
     api.user.getUserUploadStickers.useQuery();
 
+    const deletePhotosMutation = api.user.deleteStickers.useMutation({
+      onSuccess: (data) => {
+        toast.success("Photos deleted successfully");
+        utils.user.getUserUploadStickers.invalidate();
+      },
+      onError: (error) => {
+        toast.error("Failed to delete photos");
+      },
+    });
+
   const [isUploading, setIsUploading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [previewPhotos, setPreviewPhotos] = useState<PhotoPreview[]>([]);
@@ -290,6 +300,13 @@ const ArtistDashboard = () => {
   }) => {
     toast(`Sticker selected: ${photo.fileName}`);
   };
+
+  const handleDeletePhotos = async (ids: string[]) => {
+    return await deletePhotosMutation.mutateAsync({
+      ids: ids,
+    });
+};
+
   return (
     <>
       <div className="mb-10 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
@@ -297,9 +314,6 @@ const ArtistDashboard = () => {
           <h1 className="bg-primary mb-2 bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
             Artist Dashboard
           </h1>
-          <p className="text-muted-foreground text-lg">
-            Create and manage your sticker packs
-          </p>
         </div>
       </div>
 
@@ -363,6 +377,8 @@ const ArtistDashboard = () => {
                   isLoading={isImagesLoading}
                   onPhotoClick={handlePhotoClick}
                   isDownloadzip={true}
+                  deletePhotos={handleDeletePhotos}
+                  isDeleting={deletePhotosMutation.isPending}
                 />
               </motion.section>
             )}

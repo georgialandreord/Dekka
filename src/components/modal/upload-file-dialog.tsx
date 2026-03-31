@@ -15,6 +15,7 @@ import toast from "react-hot-toast";
 import { Dropbox } from "dropbox";
 import { authClient } from "~/server/better-auth/client";
 import axios from "axios";
+import { convertHeicToPng } from "~/lib/heic-converter";
 
 interface UploadedFile {
   id: string;
@@ -47,27 +48,43 @@ const UploadFileDialog = ({ open, onClose }: UploadFileDialogProps) => {
   const getGDriveUrlMutation = api.folder.getGDriveUploadUrl.useMutation();
   const { data: activePlatform, isPending: activeLoading } =
     api.settings.getActivePlatform.useQuery();
-  
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
 
     const files = Array.from(e.target.files);
-    const newFiles: UploadedFile[] = files.map((file) => {
-      const preview = file.type.startsWith("image/")
-        ? URL.createObjectURL(file)
-        : undefined;
 
-      return {
-        id: crypto.randomUUID(),
-        file,
-        preview,
-        name: file.name,
-        size: file.size,
-        type: file.type,
-      };
-    });
+    try {
+      const processedFilesPromises = files.map(async (file) => {
+        // Convert HEIC if needed
+        let processedFile = file;
+        if (
+          file.type === "image/heic" ||
+          file.name.toLowerCase().endsWith(".heic")
+        ) {
+          processedFile = await convertHeicToPng(file);
+        }
 
-    setUploadedFiles((prev) => [...prev, ...newFiles]);
+        const preview = processedFile.type.startsWith("image/")
+          ? URL.createObjectURL(processedFile)
+          : undefined;
+
+        return {
+          id: crypto.randomUUID(),
+          file: processedFile,
+          preview,
+          name: processedFile.name,
+          size: processedFile.size,
+          type: processedFile.type,
+        };
+      });
+
+      const newFiles = await Promise.all(processedFilesPromises);
+      setUploadedFiles((prev) => [...prev, ...newFiles]);
+    } catch (error) {
+      console.error("Error processing files:", error);
+      toast.error("Failed to process some files");
+    }
   };
 
   const removeFile = (id: string) => {
@@ -81,125 +98,125 @@ const UploadFileDialog = ({ open, onClose }: UploadFileDialogProps) => {
   };
 
   const uploadToDropbox = async (uploadedFile: UploadedFile) => {
-  const token = authClient.getAccessToken({ providerId: "dropbox" });
-  const accessToken = (await token).data?.accessToken;
-  if (!accessToken) {
-    throw new Error("Dropbox Access Token not found in session");
-  }
-
-  const dbx = new Dropbox({ accessToken });
-
-  let fullPath = currentPath;
-  if (!fullPath.startsWith("/")) {
-    fullPath = "/" + fullPath;
-  }
-  if (fullPath !== "/" && !fullPath.endsWith("/")) {
-    fullPath = fullPath + "/";
-  }
-  fullPath = fullPath + uploadedFile.name;
-
-  setCurrentUploadingFileId(uploadedFile.id);
-
-  const updateProgress = (progress: number) => {
-    setUploadedFiles((prev) =>
-      prev.map((f) => (f.id === uploadedFile.id ? { ...f, progress } : f)),
-    );
-  };
-
-  const MAX_SIMPLE_UPLOAD_SIZE = 50 * 1024 * 1024; // 50MB
-  const chunkSize = 4 * 1024 * 1024; // 4MB exactly
-
-  try {
-    if (uploadedFile.file.size <= MAX_SIMPLE_UPLOAD_SIZE) {
-      // Simple upload for small files
-      await dbx.filesUpload({
-        path: fullPath,
-        contents: uploadedFile.file,
-        mode: { ".tag": "add" },
-      });
-      updateProgress(100);
-      console.log("Dropbox simple upload successful");
-      return;
+    const token = authClient.getAccessToken({ providerId: "dropbox" });
+    const accessToken = (await token).data?.accessToken;
+    if (!accessToken) {
+      throw new Error("Dropbox Access Token not found in session");
     }
 
-    // Session upload for large files (existing logic with fixed chunkSize)
-    let offset = 0;
-    const sessionStart = await dbx.filesUploadSessionStart({
-      contents: uploadedFile.file.slice(0, chunkSize),
-      close: false,
-    });
+    const dbx = new Dropbox({ accessToken });
 
-    const sessionId = sessionStart.result.session_id;
-    offset += chunkSize;
-    updateProgress((offset / uploadedFile.file.size) * 100);
+    let fullPath = currentPath;
+    if (!fullPath.startsWith("/")) {
+      fullPath = "/" + fullPath;
+    }
+    if (fullPath !== "/" && !fullPath.endsWith("/")) {
+      fullPath = fullPath + "/";
+    }
+    fullPath = fullPath + uploadedFile.name;
 
-    while (offset < uploadedFile.file.size) {
-      const chunk = uploadedFile.file.slice(offset, offset + chunkSize);
-      const isLastChunk = offset + chunk.size >= uploadedFile.file.size;
+    setCurrentUploadingFileId(uploadedFile.id);
 
-      if (isLastChunk) {
-        await dbx.filesUploadSessionFinish({
-          cursor: { session_id: sessionId, offset },
-          commit: { path: fullPath, mode: { ".tag": "add" } },
-          contents: chunk,
+    const updateProgress = (progress: number) => {
+      setUploadedFiles((prev) =>
+        prev.map((f) => (f.id === uploadedFile.id ? { ...f, progress } : f)),
+      );
+    };
+
+    const MAX_SIMPLE_UPLOAD_SIZE = 50 * 1024 * 1024; // 50MB
+    const chunkSize = 4 * 1024 * 1024; // 4MB exactly
+
+    try {
+      if (uploadedFile.file.size <= MAX_SIMPLE_UPLOAD_SIZE) {
+        // Simple upload for small files
+        await dbx.filesUpload({
+          path: fullPath,
+          contents: uploadedFile.file,
+          mode: { ".tag": "add" },
         });
-      } else {
-        await dbx.filesUploadSessionAppendV2({
-          cursor: { session_id: sessionId, offset },
-          contents: chunk,
-        });
+        updateProgress(100);
+        console.log("Dropbox simple upload successful");
+        return;
       }
 
-      offset += chunk.size;
+      // Session upload for large files (existing logic with fixed chunkSize)
+      let offset = 0;
+      const sessionStart = await dbx.filesUploadSessionStart({
+        contents: uploadedFile.file.slice(0, chunkSize),
+        close: false,
+      });
+
+      const sessionId = sessionStart.result.session_id;
+      offset += chunkSize;
       updateProgress((offset / uploadedFile.file.size) * 100);
+
+      while (offset < uploadedFile.file.size) {
+        const chunk = uploadedFile.file.slice(offset, offset + chunkSize);
+        const isLastChunk = offset + chunk.size >= uploadedFile.file.size;
+
+        if (isLastChunk) {
+          await dbx.filesUploadSessionFinish({
+            cursor: { session_id: sessionId, offset },
+            commit: { path: fullPath, mode: { ".tag": "add" } },
+            contents: chunk,
+          });
+        } else {
+          await dbx.filesUploadSessionAppendV2({
+            cursor: { session_id: sessionId, offset },
+            contents: chunk,
+          });
+        }
+
+        offset += chunk.size;
+        updateProgress((offset / uploadedFile.file.size) * 100);
+      }
+
+      console.log("Dropbox session upload successful");
+    } catch (error) {
+      console.error("Dropbox API Error:", error);
+      throw error;
+    } finally {
+      setCurrentUploadingFileId(null);
     }
-
-    console.log("Dropbox session upload successful");
-  } catch (error) {
-    console.error("Dropbox API Error:", error);
-    throw error;
-  } finally {
-    setCurrentUploadingFileId(null);
-  }
-};
-
+  };
 
   const uploadToGDrive = async (uploadedFile: UploadedFile) => {
     try {
-      
-      
       // 1. Get the Resumable URL from backend
       const { uploadUrl } = await getGDriveUrlMutation.mutateAsync({
         fileName: uploadedFile.name,
         parentPath: currentPath,
         mimeType: uploadedFile.type || "application/octet-stream",
       });
-      
+
       const updateProgress = (progress: number) => {
         setUploadedFiles((prev) =>
           prev.map((f) => (f.id === uploadedFile.id ? { ...f, progress } : f)),
-      );
-    };
-    
-    // 2. Upload directly to Google Drive using the URL
-    
-    await axios.put(uploadUrl, uploadedFile.file, {
-      headers:{
-        "Content-Type": uploadedFile.type || "application/octet-stream",
-      },
-      onUploadProgress: (progressEvent) => {
-        const progress = Math.round((progressEvent.loaded * 100) / (progressEvent.total || uploadedFile.file.size));
-        updateProgress(progress);
-      },
-    })
-    
-    console.log("Google Drive upload successful");
-  } catch (error) {
-    console.log("Google Drive upload error:", error);
-    throw error;
-  } finally {
-    setCurrentUploadingFileId(null);
-  }
+        );
+      };
+
+      // 2. Upload directly to Google Drive using the URL
+
+      await axios.put(uploadUrl, uploadedFile.file, {
+        headers: {
+          "Content-Type": uploadedFile.type || "application/octet-stream",
+        },
+        onUploadProgress: (progressEvent) => {
+          const progress = Math.round(
+            (progressEvent.loaded * 100) /
+              (progressEvent.total || uploadedFile.file.size),
+          );
+          updateProgress(progress);
+        },
+      });
+
+      console.log("Google Drive upload successful");
+    } catch (error) {
+      console.log("Google Drive upload error:", error);
+      throw error;
+    } finally {
+      setCurrentUploadingFileId(null);
+    }
   };
 
   const handleUpload = async () => {

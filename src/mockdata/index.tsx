@@ -109,7 +109,7 @@ export const EFFECTS = [
     name: "Glitter",
     icon: Stars,
     description: "Add pink shimmer and shine effect",
-    preview: "💖✨",
+    preview: "💎"
   },
   {
     id: "retro_sticker",
@@ -2238,12 +2238,12 @@ export const tools = [
 // custom sticker generation
 
 export const THEMES_DATA = [
+  { id: "emoji", name: "Emoji/Expressions" },
   { id: "y2k", name: "Y2K Aesthetic" },
   { id: "vintage", name: "Vintage" },
   { id: "nature", name: "Nature" },
   { id: "food", name: "Food & Drinks" },
   { id: "music", name: "Music" },
-  { id: "emoji", name: "Emoji/Expressions" },
   { id: "custom", name: "Custom/Other" },
 ];
 
@@ -2488,6 +2488,7 @@ export const MOCK_PACKS: StickerPack[] = [
     price: 4.99,
     tags: ["marvel", "heroes", "comics"],
     favoriteUserIds: [],
+    socialLinks:[],
     createdById: "user1",
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -2501,6 +2502,7 @@ export const MOCK_PACKS: StickerPack[] = [
     price: 2.99,
     tags: ["y2k", "vintage", "aesthetic"],
     favoriteUserIds: [],
+    socialLinks:[],
     createdById: "user1",
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -2514,6 +2516,7 @@ export const MOCK_PACKS: StickerPack[] = [
     price: 0,
     tags: ["food", "cute", "emoji"],
     favoriteUserIds: [],
+    socialLinks:[],
     createdById: "user2",
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -2527,6 +2530,7 @@ export const MOCK_PACKS: StickerPack[] = [
     price: 3.49,
     tags: ["nature", "wildlife", "outdoors"],
     favoriteUserIds: [],
+    socialLinks:[],
     createdById: "user2",
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -2540,6 +2544,7 @@ export const MOCK_PACKS: StickerPack[] = [
     price: 1.99,
     tags: ["anime", "cute", "expressions"],
     favoriteUserIds: [],
+    socialLinks:[],
     createdById: "user1",
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -2553,6 +2558,7 @@ export const MOCK_PACKS: StickerPack[] = [
     price: 2.49,
     tags: ["music", "vintage", "retro"],
     favoriteUserIds: [],
+    socialLinks:[],
     createdById: "user1",
     createdAt: new Date(),
     updatedAt: new Date(),

@@ -13,6 +13,7 @@ import {
 } from "~/helpers";
 import PhotoPreviewDialog, { type PhotoPreview } from "./photo-preview-dialog";
 import { initializeModel } from "~/lib/bg-remove";
+import { convertHeicToPng } from "~/lib/heic-converter";
 
 type PhotoUploadPanelProps = {
   onAddPhoto: (decoration: DecorationInput) => void;
@@ -87,12 +88,29 @@ export default function PhotoUploadPanel({
             }
           }
         } else {
+          // Try to convert HEIC if needed
+          let processedFile = file;
+          const isHeic =
+            file.type === "image/heic" ||
+            file.name.toLowerCase().endsWith(".heic");
+
+          if (isHeic) {
+            try {
+              processedFile = await convertHeicToPng(file);
+            } catch (err) {
+              console.error("HEIC conversion failed:", err);
+              invalidFiles.push(file.name);
+              continue;
+            }
+          }
+
           const isValid =
-            isAllowedMimeType(file.type) || hasAllowedExtension(file.name);
+            isAllowedMimeType(processedFile.type) ||
+            hasAllowedExtension(processedFile.name);
           if (!isValid) {
-            invalidFiles.push(file.name);
+            invalidFiles.push(processedFile.name);
           } else {
-            validFiles.push(file);
+            validFiles.push(processedFile);
           }
         }
       }
@@ -194,8 +212,8 @@ export default function PhotoUploadPanel({
     <div className="border-border bg-background/90 flex w-80 flex-col border-l backdrop-blur-lg">
       <div className="border-border border-b p-6">
         <h3 className="bg-primary flex items-center gap-2 bg-clip-text text-xl font-bold text-transparent">
-          <ImageIcon className="text-primary h-5 w-5" />
-          Photo Library
+          <ArrowUpFromLine className="text-primary h-5 w-5" />
+          Uploads Library
         </h3>
         <p className="text-muted-foreground mt-1 text-xs">
           {uploadedPhotos?.length} photo

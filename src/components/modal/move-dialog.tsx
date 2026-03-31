@@ -183,7 +183,7 @@ const MoveDialog = ({
 
   // Check if any item would be moved to its current location
   const isSameLocation = itemsToMove.some((item) => {
-    const itemParentPath = item.path.split("/").slice(0, -1).join("/");
+    const itemParentPath = item.path?.split("/").slice(0, -1).join("/");
     const normalizedCurrentPath = selectedPath === "" ? "" : selectedPath;
     return itemParentPath === normalizedCurrentPath;
   });

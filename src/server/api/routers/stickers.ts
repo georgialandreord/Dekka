@@ -176,4 +176,29 @@ export const stickerRouter = createTRPCRouter({
       );
       return { message: "Generated stickers.json file" };
     }),
+    deleteStickers: protectedProcedure
+    .input(z.object({ ids: z.array(z.string()) }))
+    .mutation(async ({ ctx ,input}) => {
+      try {
+        const deleted = await ctx.db.stickerItem.deleteMany({
+          where:{
+            id:{
+              in: input.ids
+            }
+          }
+        })
+        const failed = deleted.count - input.ids.length;
+        if (failed > 0) {
+          console.log("Failed to delete stickers", failed);
+        }
+        console.log("Acknowledged deletion of stickers", deleted.count);
+        return deleted
+      } catch (error) {
+        console.error("Error deleting stickers:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to delete stickers",
+        });
+      }
+    }),
 });

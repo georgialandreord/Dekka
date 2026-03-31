@@ -17,6 +17,8 @@ interface Decoration {
   rotation?: number;
   zIndex?: number;
   effects?: string[];
+  sparkleColor?: string;
+  glitterColor?: string;
   frame_style?: "star" | "polaroid" | "heart" | "circle" | "default";
   frame_content?: string;
   frame_color?: string;
@@ -40,6 +42,8 @@ interface DraggableDecorationProps {
   isDragOverFrame?: boolean;
   onReorder?: (id: string, direction: "forward" | "backward") => void;
 }
+
+
 
 export default function DraggableDecoration({
   decoration,
@@ -340,6 +344,13 @@ export default function DraggableDecoration({
     }
   };
 
+  const hexToRgba = (hex: string, alpha: number) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
   return (
     <>
       {isSelected && (
@@ -383,8 +394,8 @@ export default function DraggableDecoration({
                     }}
                     onMouseDown={(e) => e.stopPropagation()}
                     className={`h-6 w-6 rounded-full transition-all ${(decoration.frame_color || FRAME_COLORS[0]) === color
-                        ? "scale-110 ring-2 ring-purple-600 ring-offset-2"
-                        : "hover:scale-110"
+                      ? "scale-110 ring-2 ring-purple-600 ring-offset-2"
+                      : "hover:scale-110"
                       }`}
                     style={{
                       backgroundColor: color,
@@ -430,7 +441,7 @@ export default function DraggableDecoration({
           transform: `rotate(${decoration.rotation || 0}deg)`,
         }}
       >
-        {decoration.effects?.includes("sparkles") && (
+        {/* {decoration.effects?.includes("sparkles") && (
           <div className="pointer-events-none absolute inset-0 z-10 overflow-visible">
             {[...Array(10)].map((_, i) => (
               <div
@@ -446,9 +457,44 @@ export default function DraggableDecoration({
                 <div
                   className="h-3 w-3 rounded-full bg-yellow-400 shadow-lg"
                   style={{
+                    backgroundColor: decoration.effectColor || "#fbbf24",
                     boxShadow: "0 0 10px #fbbf24",
                   }}
                 />
+              </div>
+            ))}
+          </div>
+        )} */}
+        {decoration.effects?.includes("sparkles") && (
+          <div className="pointer-events-none absolute inset-0 z-10 overflow-visible">
+            {[...Array(10)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute animate-ping"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  animationDelay: `${i * 0.2}s`,
+                  animationDuration: "2s",
+                }}
+              >
+                {/* Replaced the circle div with an SVG Star */}
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style={{
+                    color: decoration.sparkleColor || "#fbbf24", // Default Yellow
+                    filter: `drop-shadow(0 0 6px ${decoration.sparkleColor || "#fbbf24"})`,
+                  }}
+                >
+                  <path
+                    d="M12 2L14.09 8.26L20.18 8.64L15.54 12.74L16.91 19.36L12 15.77L7.09 19.36L8.46 12.74L3.82 8.64L9.91 8.26L12 2Z"
+                    fill="currentColor"
+                  />
+                </svg>
               </div>
             ))}
           </div>
@@ -470,6 +516,7 @@ export default function DraggableDecoration({
                 <div
                   className="h-2 w-2 rounded-full bg-pink-400 shadow-lg"
                   style={{
+                    backgroundColor: decoration.glitterColor || "#ec4899",
                     boxShadow: "0 0 8px #ec4899",
                   }}
                 />
@@ -515,8 +562,8 @@ export default function DraggableDecoration({
               src={decoration.content}
               alt=""
               className={`pointer-events-none relative z-10 h-full w-full object-contain ${decoration.effects?.includes("retro_sticker")
-                  ? "drop-shadow-md"
-                  : ""
+                ? "drop-shadow-md"
+                : ""
                 }`}
               draggable={false}
             />
@@ -546,8 +593,8 @@ export default function DraggableDecoration({
                 src={decoration.content}
                 alt=""
                 className={`pointer-events-none h-full w-full rounded-lg object-cover ${decoration.effects?.includes("retro_sticker")
-                    ? "drop-shadow-md"
-                    : ""
+                  ? "drop-shadow-md"
+                  : ""
                   }`}
                 draggable={false}
               />

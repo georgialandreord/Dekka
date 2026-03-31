@@ -9,11 +9,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../ui/alert-dialog";
+import type { UserStickerPacks } from "generated/prisma";
 
 interface DeleteConfirmModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  pack: StickerPack | null;
+  pack: UserStickerPacks | null;
   onConfirm: () => void;
   isPending?: boolean;
 }

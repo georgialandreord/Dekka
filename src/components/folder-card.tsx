@@ -11,6 +11,7 @@ import {
   Move,
   Copy,
   Share2,
+  Star,
 } from "lucide-react";
 import { Card, CardContent } from "~/components/ui/card";
 import { parseAsString, useQueryState } from "nuqs";
@@ -37,6 +38,10 @@ const FolderCard = ({
   isSelected,
   decorationData,
   index,
+  selectedItems,
+  folders,
+  files,
+  isStarredView = false,
 }: any) => {
   const navigate = useNavigate();
   const params = useParams();
@@ -54,12 +59,13 @@ const FolderCard = ({
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [showPasteDialog, setShowPasteDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [isStarred, setIsStarred] = useState(false);
+  const [isCheckingStarStatus, setIsCheckingStarStatus] = useState(true);
 
   const folderDecoration = decorationData?.find(
     (decoration: any) => decoration.folderId === folder.id,
   );
-
-  console.log(folderDecoration, "folderDecoration");
 
   const handleDoubleClick = () => {
     navigate(`/dashboard/folders${folder.path}`);
@@ -126,6 +132,9 @@ const FolderCard = ({
     onSuccess: (data) => {
       toast.success(data.message);
       utils.folder.getById.invalidate({ path: currentPath });
+      utils.starredFolder.getAll.invalidate({platform: platform || "dropbox"},{
+        exact: false
+      });
       utils.folder.getAll.invalidate();
       setShowRenameDialog(false);
     },
@@ -134,7 +143,207 @@ const FolderCard = ({
     },
   });
 
+  const moveItemMutation = api.folder.moveItem.useMutation({
+    onSuccess: () => {
+      toast.success(`Moved successfully`);
+      utils.folder.getById.invalidate({ path: currentPath });
+      utils.folder.getAll.invalidate();
+      onClearSelection();
+    },
+    onError: (error) => {
+      toast.error(`Failed to move item: ${error.message}`);
+      // Revert optimistic update by refetching
+      utils.folder.getById.invalidate({ path: currentPath });
+      utils.folder.getAll.invalidate();
+    },
+  });
+
   const { addToClipboard } = useClipboardStore();
+
+  // Check if folder is starred on mount (skip if in starred view)
+  const { data: starStatusData, isLoading: isCheckingStatus } = api.starredFolder.isStarred.useQuery(
+    {
+      folderId: folder.id,
+    },
+    {
+      enabled: !isStarredView,
+    }
+  );
+
+  useEffect(() => {
+    if (isStarredView) {
+      // In starred view, folder is always starred
+      setIsStarred(true);
+      setIsCheckingStarStatus(false);
+    } else if (starStatusData !== undefined) {
+      setIsStarred(starStatusData);
+      setIsCheckingStarStatus(false);
+    }
+  }, [starStatusData, isStarredView]);
+
+  const starFolderMutation = api.starredFolder.add.useMutation({
+    onSuccess: () => {
+      setIsStarred(true);
+      toast.success("Folder starred!");
+      utils.starredFolder.getAll.invalidate({platform: platform || "dropbox"},{
+        exact: false
+      });
+    },
+    onError: (error) => {
+      toast.error(error.message);
+      setIsStarred(false);
+    },
+  });
+
+  const unstarFolderMutation = api.starredFolder.remove.useMutation({
+    onSuccess: () => {
+      setIsStarred(false);
+      toast.success("Folder unstarred!");
+      utils.starredFolder.getAll.invalidate({platform: platform || "dropbox"},{
+        exact: false
+      });
+    },
+    onError: (error) => {
+      toast.error(error.message);
+      setIsStarred(true);
+    },
+  });
+
+  const handleHoverStart = () => {
+    utils.folder.getById.prefetch({
+      path: folder.path,
+    });
+  }
+
+  const handleToggleStar = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // Optimistic update
+    const wasStarred = isStarred;
+    setIsStarred(!wasStarred);
+    setShowDropdown(false);
+
+    try {
+      if (wasStarred) {
+        await unstarFolderMutation.mutateAsync({
+          folderId: folder.id,
+        });
+      } else {
+        await starFolderMutation.mutateAsync({
+          folderId: folder.id,
+          folderName: folder.name,
+          folderPath: folder.path,
+          folderDecorationId: folderDecoration?.id,
+          platform: platform || "dropbox",
+        });
+      }
+    } catch (error) {
+      // Error handling is in mutation onError, but we can revert optimistic update
+      setIsStarred(wasStarred);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    // Ignore drop if this folder is in the selectedItems
+    if (selectedItems && selectedItems.has(folder.name)) {
+      return;
+    }
+
+    let itemsToMove: any[] = [];
+
+    // If selectedItems exist and have items, use them for batch move
+    if (selectedItems && selectedItems.size > 0) {
+      // Use selected items for batch move
+      itemsToMove = [
+        ...folders.filter((f: any) => selectedItems.has(f.name)).map((f: any) => ({
+          name: f.name,
+          path: f.path,
+          id: f.id,
+          type: "folder",
+        })),
+        ...files.filter((f: any) => selectedItems.has(f.name)).map((f: any) => ({
+          name: f.name,
+          path: f.path || `/${f.name}`,
+          id: f.id,
+          type: "file",
+        })),
+      ];
+    } else {
+      // Fallback: read from dataTransfer if no items are selected
+      const draggedData = e.dataTransfer.getData("application/json");
+      if (draggedData) {
+        try {
+          itemsToMove = JSON.parse(draggedData);
+        } catch (error) {
+          console.error("Failed to parse dragged data:", error);
+        }
+      }
+    }
+
+    if (itemsToMove.length > 0) {
+      const toPath = folder.path;
+      handleBatchMove(itemsToMove, toPath);
+    }
+  };
+
+  const handleBatchMove = async (itemsToMove: any[], destinationPath: string) => {
+    try {
+      // Optimistic update: immediately remove items from current view
+      const itemNames = itemsToMove.map((item) => item.name);
+      utils.folder.getById.setData(
+        { path: currentPath },
+        (oldData: any) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            entries: oldData.entries.filter(
+              (item: any) => !itemNames.includes(item.name)
+            ),
+          };
+        }
+      );
+      onClearSelection();
+
+      const promises = itemsToMove.map(async (item) => {
+        const toPath = `${destinationPath}/${item.name}`;
+        return moveItemMutation.mutateAsync({
+          fromPath: item.path,
+          toPath,
+          itemType: item.type,
+          itemId: item.id,
+        });
+      });
+
+      await Promise.all(promises);
+      
+      // Invalidate destination path so it reflects the moved items
+      const normalizedDestPath = destinationPath.startsWith("/") 
+        ? destinationPath.slice(1) 
+        : destinationPath;
+      utils.folder.getById.invalidate({ path: normalizedDestPath });
+      // Also invalidate getAll since it includes all root folders
+      utils.folder.getAll.invalidate();
+    } catch (error) {
+      console.error("Failed to move items:", error);
+      toast.error("Failed to move items");
+    }
+  };
 
   const handleDelete = () => {
     setShowDropdown(false);
@@ -190,6 +399,7 @@ const FolderCard = ({
 
   return (
     <motion.div
+      onHoverStart={handleHoverStart}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
@@ -198,14 +408,96 @@ const FolderCard = ({
       onMouseLeave={() => setIsHovered(false)}
       className={`relative ${deleteFolderMutation.isPending ? "opacity-30!" : deleteFolderMutation.isSuccess ? "opacity-0!" : ""}`}
       style={{ userSelect: "none" }}
+      draggable
+      onDragStart={(e: any) => {
+        let itemsToMove: any[] = [];
+
+        if (isSelected && selectedItems && selectedItems.size > 0) {
+          // If this item is selected, drag all selected items
+          itemsToMove = [
+            ...folders.filter((f: any) => selectedItems.has(f.name)).map((f: any) => ({
+              name: f.name,
+              path: f.path,
+              id: f.id,
+              type: "folder",
+            })),
+            ...files.filter((f: any) => selectedItems.has(f.name)).map((f: any) => ({
+              name: f.name,
+              path: f.path || `/${f.name}`,
+              id: f.id,
+              type: "file",
+            })),
+          ];
+        } else {
+          // If this item is not selected, drag only this folder
+          itemsToMove = [{ name: folder.name, path: folder.path, id: folder.id, type: "folder" }];
+        }
+
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("application/json", JSON.stringify(itemsToMove));
+
+        // FIX: Custom drag image for multiple items
+        if (itemsToMove.length > 1) {
+          // Create a container for the custom drag image
+          const dragImageContainer = document.createElement("div");
+          dragImageContainer.style.position = "absolute";
+          dragImageContainer.style.top = "-1000px";
+          dragImageContainer.style.left = "-1000px";
+          dragImageContainer.style.pointerEvents = "none";
+          dragImageContainer.style.zIndex = "9999";
+          
+          // Clone the current card to use as the base visual
+          const clone = e.currentTarget.cloneNode(true) as HTMLElement;
+          clone.style.transform = "none"; // Reset any transform animations
+          clone.style.opacity = "1";
+          // Remove specific hover/selection states from the clone if desired, 
+          // or keep them to show it's the selected one being dragged.
+          
+          // Create a badge to show the count
+          const badge = document.createElement("div");
+          badge.innerText = `${itemsToMove.length}`;
+          badge.style.position = "absolute";
+          badge.style.bottom = "-10px";
+          badge.style.right = "-10px";
+          badge.style.backgroundColor = "#ef4444"; // Red badge
+          badge.style.color = "white";
+          badge.style.borderRadius = "9999px";
+          badge.style.width = "24px";
+          badge.style.height = "24px";
+          badge.style.display = "flex";
+          badge.style.alignItems = "center";
+          badge.style.justifyContent = "center";
+          badge.style.fontWeight = "bold";
+          badge.style.fontSize = "12px";
+          badge.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
+
+          dragImageContainer.appendChild(clone);
+          dragImageContainer.appendChild(badge);
+
+          document.body.appendChild(dragImageContainer);
+          
+          // Set the custom drag image
+          e.dataTransfer.setDragImage(dragImageContainer, 0, 0);
+
+          // Clean up the element after the browser captures the image
+          requestAnimationFrame(() => {
+            if (document.body.contains(dragImageContainer)) {
+              document.body.removeChild(dragImageContainer);
+            }
+          });
+        }
+      }}
     >
       <Card
         className={`group cursor-pointer overflow-hidden bg-white/80 py-0 backdrop-blur-sm transition-all duration-200 hover:shadow-xl ${
           isSelected
             ? "border-primary ring-primary/20 border-2 shadow-lg ring-2"
             : "border-border hover:border-primary/50 border hover:shadow-md"
-        }`}
+        } ${isDragOver ? "border-primary border-2 shadow-lg ring-2 ring-primary/20 bg-primary/5" : ""}`}
         onClick={handleFolderClick}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
         title="Double-click to open folder"
       >
         <button
@@ -238,6 +530,17 @@ const FolderCard = ({
 
           {showDropdown && (
             <div className="border-border bg-popover absolute top-full right-0 z-100 mt-1 w-32 overflow-hidden rounded-lg border shadow-lg">
+              <button
+                onClick={handleToggleStar}
+                disabled={isCheckingStatus}
+                className="text-popover-foreground hover:bg-accent hover:text-accent-foreground flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm transition-colors disabled:opacity-50"
+              >
+                <Star
+                  className="h-3 w-3"
+                  fill={isStarred ? "currentColor" : "none"}
+                />
+                {isStarred ? "Unstar" : "Star"}
+              </button>
               <button
                 onClick={handleShare}
                 className="text-popover-foreground hover:bg-accent hover:text-accent-foreground flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm transition-colors"
@@ -363,7 +666,7 @@ const FolderCard = ({
                   >
                     {/* START: ADDED EFFECTS LOGIC */}
                     {/* Sparkles Effect */}
-                    {decoration.effects?.includes("sparkles") && (
+                    {/* {decoration.effects?.includes("sparkles") && (
                       <div className="pointer-events-none absolute inset-0 z-10 overflow-visible">
                         {[...Array(10)].map((_, i) => (
                           <div
@@ -380,12 +683,48 @@ const FolderCard = ({
                               className="bg-warning h-3 w-3 rounded-full shadow-lg"
                               style={{
                                 boxShadow: "0 0 10px #fbbf24",
+                                color: folderDecoration.sparkleColor || "#fbbf24"
                               }}
                             />
                           </div>
                         ))}
                       </div>
-                    )}
+                    )} */}
+
+                    {decoration.effects?.includes("sparkles") && (
+          <div className="pointer-events-none absolute inset-0 z-10 overflow-visible">
+            {[...Array(10)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute animate-ping"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  animationDelay: `${i * 0.2}s`,
+                  animationDuration: "2s",
+                }}
+              >
+                {/* Replaced the circle div with an SVG Star */}
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style={{
+                    color: `${decoration?.sparkleColor}`,
+                    filter: `drop-shadow(0 0 6px ${decoration?.sparkleColor})`,
+                  }}
+                >
+                  <path
+                    d="M12 2L14.09 8.26L20.18 8.64L15.54 12.74L16.91 19.36L12 15.77L7.09 19.36L8.46 12.74L3.82 8.64L9.91 8.26L12 2Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </div>
+            ))}
+          </div>
+        )}
 
                     {/* Glitter Effect */}
                     {decoration.effects?.includes("glitter") && (
@@ -402,8 +741,9 @@ const FolderCard = ({
                             }}
                           >
                             <div
-                              className="h-2 w-2 rounded-full bg-pink-400 shadow-lg"
+                              className="h-2 w-2 rounded-full shadow-lg"
                               style={{
+                                backgroundColor: `${decoration?.glitterColor}`,
                                 boxShadow: "0 0 8px #ec4899",
                               }}
                             />
@@ -688,10 +1028,10 @@ const FolderCard = ({
               <h3 className="text-foreground truncate font-semibold">
                 {folder.name}
               </h3>
-              <p className="text-muted-foreground text-sm">
+              {/* <p className="text-muted-foreground text-sm">
                 {folderDecoration?.decorations?.length || 0} decoration
                 {(folderDecoration?.decorations?.length || 0) !== 1 ? "s" : ""}
-              </p>
+              </p> */}
             </div>
           </div>
         </CardContent>
@@ -778,3 +1118,136 @@ function getHueRotation(color: string | number) {
   };
   return colorMap[color as keyof typeof colorMap] || 0;
 }
+
+
+// // ... existing imports
+
+// const FolderCard = ({
+//   folder,
+//   onSelect,
+//   onSingleSelect,
+//   onClearSelection,
+//   isSelected,
+//   decorationData,
+//   index,
+//   selectedItems,
+//   folders,
+//   files,
+// }: any) => {
+//   // ... existing hooks and state logic (useState, useEffect, mutations, etc.)
+
+//   // ... existing handlers (handleDoubleClick, handleFolderClick, etc.)
+
+//   return (
+//     <motion.div
+//       initial={{ opacity: 0, y: 20 }}
+//       animate={{ opacity: 1, y: 0 }}
+//       transition={{ delay: index * 0.05 }}
+//       onDoubleClick={handleDoubleClick}
+//       onMouseEnter={() => setIsHovered(true)}
+//       onMouseLeave={() => setIsHovered(false)}
+//       className={`relative ${deleteFolderMutation.isPending ? "opacity-30!" : deleteFolderMutation.isSuccess ? "opacity-0!" : ""}`}
+//       style={{ userSelect: "none" }}
+//       draggable
+//       onDragStart={(e: any) => {
+//         let itemsToMove: any[] = [];
+
+//         if (isSelected && selectedItems && selectedItems.size > 0) {
+//           // If this item is selected, drag all selected items
+//           itemsToMove = [
+//             ...folders.filter((f: any) => selectedItems.has(f.name)).map((f: any) => ({
+//               name: f.name,
+//               path: f.path,
+//               id: f.id,
+//               type: "folder",
+//             })),
+//             ...files.filter((f: any) => selectedItems.has(f.name)).map((f: any) => ({
+//               name: f.name,
+//               path: f.path || `/${f.name}`,
+//               id: f.id,
+//               type: "file",
+//             })),
+//           ];
+//         } else {
+//           // If this item is not selected, drag only this folder
+//           itemsToMove = [{ name: folder.name, path: folder.path, id: folder.id, type: "folder" }];
+//         }
+
+//         e.dataTransfer.effectAllowed = "move";
+//         e.dataTransfer.setData("application/json", JSON.stringify(itemsToMove));
+
+//         // FIX: Custom drag image for multiple items
+//         if (itemsToMove.length > 1) {
+//           // Create a container for the custom drag image
+//           const dragImageContainer = document.createElement("div");
+//           dragImageContainer.style.position = "absolute";
+//           dragImageContainer.style.top = "-1000px";
+//           dragImageContainer.style.left = "-1000px";
+//           dragImageContainer.style.pointerEvents = "none";
+//           dragImageContainer.style.zIndex = "9999";
+          
+//           // Clone the current card to use as the base visual
+//           const clone = e.currentTarget.cloneNode(true) as HTMLElement;
+//           clone.style.transform = "none"; // Reset any transform animations
+//           clone.style.opacity = "1";
+//           // Remove specific hover/selection states from the clone if desired, 
+//           // or keep them to show it's the selected one being dragged.
+          
+//           // Create a badge to show the count
+//           const badge = document.createElement("div");
+//           badge.innerText = `${itemsToMove.length}`;
+//           badge.style.position = "absolute";
+//           badge.style.bottom = "-10px";
+//           badge.style.right = "-10px";
+//           badge.style.backgroundColor = "#ef4444"; // Red badge
+//           badge.style.color = "white";
+//           badge.style.borderRadius = "9999px";
+//           badge.style.width = "24px";
+//           badge.style.height = "24px";
+//           badge.style.display = "flex";
+//           badge.style.alignItems = "center";
+//           badge.style.justifyContent = "center";
+//           badge.style.fontWeight = "bold";
+//           badge.style.fontSize = "12px";
+//           badge.style.boxShadow = "0 2px 4px rgba(0,0,0,0.2)";
+
+//           dragImageContainer.appendChild(clone);
+//           dragImageContainer.appendChild(badge);
+
+//           document.body.appendChild(dragImageContainer);
+          
+//           // Set the custom drag image
+//           e.dataTransfer.setDragImage(dragImageContainer, 0, 0);
+
+//           // Clean up the element after the browser captures the image
+//           requestAnimationFrame(() => {
+//             if (document.body.contains(dragImageContainer)) {
+//               document.body.removeChild(dragImageContainer);
+//             }
+//           });
+//         }
+//       }}
+//     >
+//       {/* ... existing Card and CardContent JSX ... */}
+      
+//       <Card
+//         className={`group cursor-pointer overflow-hidden bg-white/80 py-0 backdrop-blur-sm transition-all duration-200 hover:shadow-xl ${
+//           isSelected
+//             ? "border-primary ring-primary/20 border-2 shadow-lg ring-2"
+//             : "border-border hover:border-primary/50 border hover:shadow-md"
+//         } ${isDragOver ? "border-primary border-2 shadow-lg ring-2 ring-primary/20 bg-primary/5" : ""}`}
+//         onClick={handleFolderClick}
+//         onDragOver={handleDragOver}
+//         onDragLeave={handleDragLeave}
+//         onDrop={handleDrop}
+//         title="Double-click to open folder"
+//       >
+//         {/* ... rest of the component ... */}
+//       </Card>
+
+//       {/* ... Dialogs ... */}
+//     </motion.div>
+//   );
+// };
+
+// export default FolderCard;
