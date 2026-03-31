@@ -1,5 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { authClient } from "~/server/better-auth/client";
+import { Navigate } from "react-router";
 import { ArrowLeft, Package, Loader2, Image } from "lucide-react";
 import { Link } from "react-router";
 import { Button } from "~/components/ui/button";
@@ -41,8 +43,12 @@ import PatternPhotoPreviewGrid from "~/components/sandbox/uploadPatterns/photo-p
 import PhotoLibrary from "~/components/sandbox/uploadStickers/photo-library";
 import type { PhotoPreview } from "~/components/sandbox/uploadPatterns/photo-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { ADMIN_ID } from "~/server/better-auth/config";
 
 export default function Upload() {
+
+    const { data: session, isPending } = authClient.useSession();
+
   const utils = api.useUtils();
   const UploadStickerMutation =
     api.cloudnary.getUploadStickerPresignedUrl.useMutation();
@@ -666,7 +672,20 @@ export default function Upload() {
       ids: ids,
     });
   };
+    if (isPending) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
+  if(session?.user?.id !== ADMIN_ID){
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <div className="min-h-screen">

@@ -121,3 +121,5 @@ export const auth = betterAuth({
 });
 
 export type Session = typeof auth.$Infer.Session;
+
+export const ADMIN_ID = "EYsRH8hFWpvZjJhWQmbK4esHNul76F41"

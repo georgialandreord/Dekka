@@ -4,6 +4,7 @@ import { Navigate } from "react-router";
 import { useActiveSubscription } from "~/hooks/use-active-subscription";
 import { authClient } from "~/server/better-auth/client";
 import Subscribe from "./subsrcibe";
+import { ADMIN_ID } from "~/server/better-auth/config";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -40,7 +41,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/auth/login" replace />;
   }
 
-  if(!isActiveSubscription) {
+  if(!isActiveSubscription && session.user.id !== ADMIN_ID) {
     return <Subscribe/>
   }
 
