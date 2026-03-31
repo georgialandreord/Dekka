@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Package, Loader2 } from "lucide-react";
+import { ArrowLeft, Package, Loader2, Image } from "lucide-react";
 import { Link } from "react-router";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -97,6 +97,38 @@ export default function Upload() {
 
     preloadModel();
   }, [isModelReady]);
+
+
+  const groupedStickers = useMemo(() => {
+    if (!stickers) return {};
+
+    return stickers.reduce((acc, category) => {
+      const categoryName = category.name || "Uncategorized";
+
+      // Initialize array for this category if it doesn't exist
+      if (!acc[categoryName]) {
+        acc[categoryName] = [];
+      }
+
+      // Map the stickers to the PhotoLibrary format and add to the group
+      const formattedStickers = category.stickers.map((item) => ({
+        id: item.id,
+        fileName: item.name,
+        fileUrl: item.url,
+        thumbnailUrl: item.url,
+        order: category.order
+      }));
+
+      acc[categoryName] = [...acc[categoryName], ...formattedStickers];
+      return acc;
+    }, {} as Record<string, {
+      id: string;
+      fileName: string;
+      fileUrl: string;
+      thumbnailUrl: string;
+      order: number;
+    }[]>);
+  }, [stickers]);
 
   const handleFilesSelected = useCallback(
     async (files: File[]) => {
@@ -599,6 +631,18 @@ export default function Upload() {
     }
   );
 
+  const updateOrderMutation = api.sticker.updateCategoryOrder.useMutation(
+    {
+      onSuccess: (data) => {
+        toast.success("Order update successfully");
+        utils.sticker.getAllStickers.invalidate();
+      },
+      onError: (error) => {
+        toast.error("Failed to delete photos");
+      },
+    }
+  )
+
   const deletePatternsMutation = api.backgroundPattern.deleteBackgroundPattern.useMutation(
     {
       onSuccess: (data) => {
@@ -618,9 +662,9 @@ export default function Upload() {
   };
 
   const handleDeletePhotos = async (ids: string[]) => {
-      return await deletePhotosMutation.mutateAsync({
-        ids: ids,
-      });
+    return await deletePhotosMutation.mutateAsync({
+      ids: ids,
+    });
   };
 
 
@@ -691,30 +735,203 @@ export default function Upload() {
               </AnimatePresence>
 
               {/* Library section */}
+              {/* {!showPreview && (
+                <motion.section
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="glass border-primary/50 bg-card rounded-3xl border p-6 flex flex-col gap-6"
+                >
+                  {(Object.entries(groupedStickers || {}).length === 0)
+                    ? (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex flex-col items-center justify-center py-20 text-center"
+                      >
+                        <div className="bg-muted mb-6 flex h-20 w-20 items-center justify-center rounded-2xl">
+                          <Image className="text-muted-foreground h-10 w-10" />
+                        </div>
+                        <h3 className="text-foreground mb-2 text-lg font-semibold">
+                          Your library is empty
+                        </h3>
+                        <p className="text-muted-foreground max-w-sm text-sm">
+                          Upload your first stickers above to start building your collection.
+                        </p>
+                      </motion.div>
+                    ) : null
+                  }
+                  {Object.entries(groupedStickers || {})?.map(([name, stickers]) =>
+                    <div
+                      key={name}
+                    >
+                      <p>
+                        {stickers?.[0]?.order}
+                        <input type="number" value={newOrder} onChange={(e) => {
+                          setNewOrder(Number(e.target.value))
+                        }} />
+                        <button
+                          disabled={!newOrder}
+                          onClick={() => {
+                            if (!newOrder) {
+                              return
+                            }
+                            updateOrder({
+                              categoryName: name,
+                              newOrder
+                            })
+                          }}
+                        >update</button>
+                      </p>
+                      <PhotoLibrary
+
+                        name={name}
+                        photos={
+                          stickers?.map((item) => ({
+                            id: item?.id,
+                            fileName: item?.fileName,
+                            fileUrl: item?.fileUrl,
+                            thumbnailUrl: item?.fileUrl,
+                          })) ?? []
+                        }
+                        isLoading={isStickerLoading}
+                        onPhotoClick={handlePhotoClick}
+                        isDownloadzip={true}
+                        deletePhotos={handleDeletePhotos}
+                        isDeleting={deletePhotosMutation.isPending}
+                        multiple
+                      />
+                    </div>
+                  )}
+                </motion.section>
+              )} */}
+
               {!showPreview && (
                 <motion.section
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="glass border-primary/50 bg-card rounded-3xl border p-6"
+                  className="glass border-primary/50 bg-card rounded-3xl border p-6 flex flex-col gap-6"
                 >
-                  <PhotoLibrary
-                    photos={
-                      stickers?.flatMap((sticker) =>
-                        sticker.stickers.map((item) => ({
-                          id: item.id,
-                          fileName: item.name,
-                          fileUrl: item.url,
-                          thumbnailUrl: item.url,
-                        })),
-                      ) ?? []
-                    }
-                    isLoading={isStickerLoading}
-                    onPhotoClick={handlePhotoClick}
-                    isDownloadzip={true}
-                    deletePhotos={handleDeletePhotos}
-                    isDeleting={deletePhotosMutation.isPending}
-                  />
+                  {/* Empty State */}
+                  {(Object.entries(groupedStickers || {}).length === 0) ? (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex flex-col items-center justify-center py-20 text-center"
+                    >
+                      <div className="bg-muted mb-6 flex h-20 w-20 items-center justify-center rounded-2xl">
+                        <Image className="text-muted-foreground h-10 w-10" />
+                      </div>
+                      <h3 className="text-foreground mb-2 text-lg font-semibold">
+                        Your library is empty
+                      </h3>
+                      <p className="text-muted-foreground max-w-sm text-sm">
+                        Upload your first stickers above to start building your collection.
+                      </p>
+                    </motion.div>
+                  ) : (
+                    /* Categories List */
+                    <div className="flex flex-col gap-8">
+                      {!showPreview && (
+                        <motion.section
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.2 }}
+                          className="glass border-primary/50 bg-card rounded-3xl border p-6 flex flex-col gap-6"
+                        >
+                          {(Object.entries(groupedStickers || {}).length === 0) ? (
+                            <motion.div
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="flex flex-col items-center justify-center py-20 text-center"
+                            >
+                              <div className="bg-muted mb-6 flex h-20 w-20 items-center justify-center rounded-2xl">
+                                <Image className="text-muted-foreground h-10 w-10" />
+                              </div>
+                              <h3 className="text-foreground mb-2 text-lg font-semibold">
+                                Your library is empty
+                              </h3>
+                              <p className="text-muted-foreground max-w-sm text-sm">
+                                Upload your first stickers above to start building your collection.
+                              </p>
+                            </motion.div>
+                          ) : (
+                            <div className="flex flex-col gap-8">
+                              {Object.entries(groupedStickers || {})?.map(([name, stickers]) => {
+                                const currentOrder = stickers?.[0]?.order ?? 0;
+
+                                return (
+                                  <div key={name} className="group relative">
+                                    <div className="mb-4 flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
+                                      <div className="flex items-center gap-3">
+                                        <div className="relative flex items-center">
+                                          <Label className="absolute -top-2.5 left-2 z-10 bg-slate-50 px-1 text-xs font-medium text-slate-500 dark:bg-slate-900/50 dark:text-slate-400">
+                                            Current: {currentOrder}
+                                          </Label>
+
+                                          <input
+                                            type="number"
+                                            defaultValue={currentOrder}
+                                            id={`order-input-${name}`}
+                                            min="1"
+                                            className="h-9 w-24 rounded-md border border-input bg-background px-3 py-1 text-center text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                          />
+                                        </div>
+
+                                        <Button
+                                          size="sm"
+                                          className="bg-primary cursor-pointer"
+                                          disabled={updateOrderMutation.isPending && updateOrderMutation.variables?.categoryName === name}
+                                          onClick={(e) => {
+                                            // Read value directly from the DOM input
+                                            const inputEl = document.getElementById(`order-input-${name}`) as HTMLInputElement;
+                                            const val = Number(inputEl?.value);
+
+                                            if (!val) return;
+
+                                            updateOrderMutation.mutate({
+                                              categoryName: name,
+                                              newOrder: val
+                                            });
+                                          }}
+                                        >
+                                          {/* Show loader ONLY if this specific category is loading */}
+                                          {updateOrderMutation.isPending && updateOrderMutation.variables?.categoryName === name ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                          ) : (
+                                            "Update"
+                                          )}
+                                        </Button>
+                                      </div>
+                                    </div>
+
+                                    <PhotoLibrary
+                                      name={name}
+                                      photos={
+                                        stickers?.map((item) => ({
+                                          id: item?.id,
+                                          fileName: item?.fileName,
+                                          fileUrl: item?.fileUrl,
+                                          thumbnailUrl: item?.fileUrl,
+                                        })) ?? []
+                                      }
+                                      isLoading={isStickerLoading}
+                                      onPhotoClick={handlePhotoClick}
+                                      isDownloadzip={true}
+                                      deletePhotos={handleDeletePhotos}
+                                      isDeleting={deletePhotosMutation.isPending}
+                                      multiple
+                                    />
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </motion.section>
+                      )}
+                    </div>
+                  )}
                 </motion.section>
               )}
             </div>

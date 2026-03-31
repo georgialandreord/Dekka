@@ -17,6 +17,9 @@ export const stickerRouter = createTRPCRouter({
   getAllStickers: protectedProcedure.query(async ({ ctx }) => {
     try {
       const stickers = await ctx.db.sticker.findMany({
+        orderBy : {
+          order : 'asc'
+        },
         include: { stickers: true },
       });
       return stickers;
@@ -198,6 +201,39 @@ export const stickerRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to delete stickers",
+        });
+      }
+    }),
+
+    updateCategoryOrder: protectedProcedure
+    .input(
+      z.object({
+        categoryName: z.string(),
+        newOrder: z.number(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { categoryName, newOrder } = input;
+
+      try {
+
+        const response = await ctx.db.sticker.updateMany({
+          where:{
+            name:categoryName
+          },
+          data:{
+            order:newOrder
+          }
+        })
+
+ 
+
+        return { success: true };
+      } catch (error) {
+        console.error("Error updating order:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update order",
         });
       }
     }),

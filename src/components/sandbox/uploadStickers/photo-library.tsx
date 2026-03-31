@@ -13,6 +13,7 @@ interface Photo {
 }
 
 interface PhotoLibraryProps {
+  name?: string;
   photos: Photo[];
   isLoading: boolean;
   onPhotoClick?: (photo: Photo) => void;
@@ -20,16 +21,19 @@ interface PhotoLibraryProps {
   isDownloadzip?: boolean;
   deletePhotos?: (ids: string[]) => Promise<{ count: number }>;
   isDeleting?: boolean;
+  multiple?: boolean
 }
 
 export default function PhotoLibrary({
+  name,
   photos,
   isLoading,
   onPhotoClick,
   allowSelection = true,
   isDownloadzip,
   deletePhotos,
-  isDeleting
+  isDeleting,
+  multiple = false
 }: PhotoLibraryProps) {
   const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
   const [isDownloading, setIsDownloading] = useState(false);
@@ -175,7 +179,7 @@ export default function PhotoLibrary({
     );
   }
 
-  if (photos.length === 0) {
+  if (photos.length === 0 && !multiple) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -209,7 +213,7 @@ export default function PhotoLibrary({
           </div>
           <div>
             <h3 className="text-foreground text-sm font-semibold">
-              Your Library
+              {name || "Your Library"}
             </h3>
             <p className="text-muted-foreground text-xs">
               {photos.length} sticker{photos.length !== 1 ? "s" : ""}
@@ -272,6 +276,7 @@ export default function PhotoLibrary({
       </div>
 
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
+
         {photos.map((photo, index) => {
           const isSelected = selectedPhotos.has(photo.id);
 
@@ -325,7 +330,7 @@ export default function PhotoLibrary({
                       }`}
                     onClick={(e) => {
                       e.stopPropagation();
-                     isDownloadzip && togglePhotoSelection(photo.id);
+                      isDownloadzip && togglePhotoSelection(photo.id);
                     }}
                   >
                     {isSelected && isDownloadzip ? (
