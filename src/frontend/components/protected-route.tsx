@@ -4,7 +4,7 @@ import { Navigate } from "react-router";
 import { useActiveSubscription } from "~/hooks/use-active-subscription";
 import { authClient } from "~/server/better-auth/client";
 import Subscribe from "./subsrcibe";
-import { ADMIN_ID } from "~/server/better-auth/config";
+import { ADMIN_ID } from "~/lib/utils";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

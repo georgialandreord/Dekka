@@ -43,7 +43,7 @@ import PatternPhotoPreviewGrid from "~/components/sandbox/uploadPatterns/photo-p
 import PhotoLibrary from "~/components/sandbox/uploadStickers/photo-library";
 import type { PhotoPreview } from "~/components/sandbox/uploadPatterns/photo-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { ADMIN_ID } from "~/server/better-auth/config";
+import { ADMIN_ID } from "~/lib/utils";
 
 export default function Upload() {
 
