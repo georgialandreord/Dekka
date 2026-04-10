@@ -4,11 +4,12 @@ import { Navigate } from "react-router";
 import { useActiveSubscription } from "~/hooks/use-active-subscription";
 import { authClient } from "~/server/better-auth/client";
 import Subscribe from "./subsrcibe";
-import { ADMIN_ID } from "~/lib/utils";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
+
+const ADMIN_ID = "EYsRH8hFWpvZjJhWQmbK4esHNul76F41"
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { data: session, isPending } = authClient.useSession();

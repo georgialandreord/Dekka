@@ -43,7 +43,8 @@ import PatternPhotoPreviewGrid from "~/components/sandbox/uploadPatterns/photo-p
 import PhotoLibrary from "~/components/sandbox/uploadStickers/photo-library";
 import type { PhotoPreview } from "~/components/sandbox/uploadPatterns/photo-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { ADMIN_ID } from "~/lib/utils";
+
+const ADMIN_ID = "EYsRH8hFWpvZjJhWQmbK4esHNul76F41"
 
 export default function Upload() {
 

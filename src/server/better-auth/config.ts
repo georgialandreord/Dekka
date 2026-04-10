@@ -110,7 +110,7 @@ export const auth = betterAuth({
           products: [
          
           ],
-          successUrl: env.POLAR_SUCCESS_URL,
+          successUrl: env.POLAR_SUCCESS_URL as string,
           authenticatedUsersOnly: true,
         }),
         usage(),
